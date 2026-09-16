@@ -26,7 +26,13 @@ class Product extends Model
         return $this->belongsToMany(Category::class,'category_products','product_id','category_id');
     }
 
-    public function components()
+    public function assemblies()
+    {
+        return $this->hasMany(Assembly::class);
+    }
+
+
+    public function componentProducts()
     {
         return $this->hasMany(ComponentProduct::class);
     }

@@ -214,14 +214,14 @@ new class extends Component
 
         $this->resetComponent();
 
-        $this->product->load('components.typeFactory');
+        $this->product->load('componentProducts.typeFactory');
 
         $this->resetValidation();
     }
 
     public function editComponent($id)
     {
-        $component = $this->product->components()->findOrFail($id);
+        $component = $this->product->componentProducts()->findOrFail($id);
 
         $this->component = [
             'id' => $component->id,
@@ -243,7 +243,7 @@ new class extends Component
             'component.type_factory_id' => 'required|exists:type_factories,id',
         ]);
 
-        $component = $this->product->components()
+        $component = $this->product->componentProducts()
             ->findOrFail($this->component['id']);
 
         $component->update([
@@ -255,18 +255,18 @@ new class extends Component
 
         $this->resetComponent();
 
-        $this->product->load('components.typeFactory');
+        $this->product->load('componentProducts.typeFactory');
 
         $this->resetValidation();
     }
 
     public function deleteComponent($id)
     {
-        $this->product->components()
+        $this->product->componentProducts()
             ->findOrFail($id)
             ->delete();
 
-        $this->product->load('components.typeFactory');
+        $this->product->load('componentProducts.typeFactory');
     }
 
     public function resetComponent()
@@ -426,7 +426,7 @@ new class extends Component
         $this->product->load([
             'typeFactory',
             'categories',
-            'components.typeFactory',
+            'componentProducts.typeFactory',
             'tagProducts',
             'files',
         ]);

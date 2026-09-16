@@ -154,8 +154,8 @@ return [
 
     'layout_topnav' => null,
     'layout_boxed' => null,
-    'layout_fixed_sidebar' => null,
-    'layout_fixed_navbar' => null,
+    'layout_fixed_sidebar' => true,
+    'layout_fixed_navbar' => true,
     'layout_fixed_footer' => null,
     'layout_dark_mode' => null,
 
@@ -298,102 +298,78 @@ return [
     |
     */
 
+
+    // Sidebar items:
     'menu' => [
-        // Navbar items:
+
+        /*
+        |--------------------------------------------------------------------------
+        | Catálogo
+        |--------------------------------------------------------------------------
+        */
+
         [
-            'type' => 'navbar-search',
-            'text' => 'search',
-            'topnav_right' => true,
-        ],
-        [
-            'type' => 'fullscreen-widget',
-            'topnav_right' => true,
+            'header' => 'Catalogo',
         ],
 
-        // Sidebar items:
         [
-            'type' => 'sidebar-menu-search',
-            'text' => 'search',
+            'text' => 'Productos',
+            'route' => 'dashboard.products',
+            'icon' => 'fas fa-fw fa-box',
+        ],
+
+        [
+            'text' => 'Categorías',
+            'route' => 'dashboard.categories',
+            'icon' => 'fas fa-fw fa-tags',
+        ],
+
+        [
+            'text' => 'Tipos de fábrica',
+            'route' => 'dashboard.type-factories',
+            'icon' => 'fas fa-fw fa-industry',
         ],
         [
-            'text' => 'blog',
-            'url' => 'admin/blog',
-            'can' => 'manage-blog',
+            'text' => 'Fábricas',
+            'route' => 'dashboard.industries',
+            'icon' => 'fas fa-fw fa-building',
         ],
         [
-            'text' => 'pages',
-            'url' => 'admin/pages',
-            'icon' => 'far fa-fw fa-file',
-            'label' => 4,
-            'label_color' => 'success',
+            'text' => 'Usuarios',
+            'route' => 'dashboard.users',
+            'icon' => 'fas fa-fw fa-users',
         ],
-        ['header' => 'account_settings'],
+
+        // Panel de trabajo
         [
-            'text' => 'profile',
-            'url' => 'admin/settings',
-            'icon' => 'fas fa-fw fa-user',
+            'text' => 'Panel de trabajo',
+            'route' => 'dashboard.worker',
+            'icon' => 'fas fa-fw fa-hard-hat',
         ],
+
+        /*
+        |--------------------------------------------------------------------------
+        | Gestión comercial
+        |--------------------------------------------------------------------------
+        */
+
         [
-            'text' => 'change_password',
-            'url' => 'admin/settings',
-            'icon' => 'fas fa-fw fa-lock',
+            'header' => 'Gestión comercial',
         ],
+
         [
-            'text' => 'multilevel',
-            'icon' => 'fas fa-fw fa-share',
-            'submenu' => [
-                [
-                    'text' => 'level_one',
-                    'url' => '#',
-                ],
-                [
-                    'text' => 'level_one',
-                    'url' => '#',
-                    'submenu' => [
-                        [
-                            'text' => 'level_two',
-                            'url' => '#',
-                        ],
-                        [
-                            'text' => 'level_two',
-                            'url' => '#',
-                            'submenu' => [
-                                [
-                                    'text' => 'level_three',
-                                    'url' => '#',
-                                ],
-                                [
-                                    'text' => 'level_three',
-                                    'url' => '#',
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-                [
-                    'text' => 'level_one',
-                    'url' => '#',
-                ],
-            ],
+            'text' => 'Cotizaciones',
+            'route' => 'dashboard.quotations',
+            'icon' => 'fas fa-fw fa-file-invoice',
         ],
-        ['header' => 'labels'],
+
         [
-            'text' => 'important',
-            'icon_color' => 'red',
-            'url' => '#',
+            'text' => 'Contratos',
+            'route' => 'dashboard.contracts',
+            'icon' => 'fas fa-fw fa-file-signature',
         ],
-        [
-            'text' => 'warning',
-            'icon_color' => 'yellow',
-            'url' => '#',
-        ],
-        [
-            'text' => 'information',
-            'icon_color' => 'cyan',
-            'url' => '#',
-        ],
+
     ],
-
     /*
     |--------------------------------------------------------------------------
     | Menu Filters

@@ -17,4 +17,12 @@ class ComponentProduct extends Model
     public function typeFactory(){
         return $this->belongsTo(TypeFactory::class);
     }
+
+    public function assemblyComponents()
+    {
+        return $this->hasMany(
+            AssemblyComponent::class
+        );
+    }
+
 }

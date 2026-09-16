@@ -519,7 +519,7 @@
         </div>
 
 
-        @if ($product->components->count())
+        @if ($product->componentProducts->count())
 
             <div class="card-body p-0">
 
@@ -539,7 +539,7 @@
 
                         <tbody>
 
-                        @foreach ($product->components as $component)
+                        @foreach ($product->componentProducts as $component)
 
                             <tr>
 
