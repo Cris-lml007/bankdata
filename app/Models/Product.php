@@ -11,6 +11,33 @@ class Product extends Model
         'cod',
         'price_purchase',
         'price_sale',
-        'model'
+        'model',
+        'description',
+        'type_factory_id',
     ];
+
+    public function typeFactory()
+    {
+        return $this->belongsTo(TypeFactory::class);
+    }
+
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class,'category_products','product_id','category_id');
+    }
+
+    public function components()
+    {
+        return $this->hasMany(ComponentProduct::class);
+    }
+
+    public function tagProducts()
+    {
+        return $this->hasMany(TagProduct::class);
+    }
+
+    public function files()
+    {
+        return $this->hasMany(File::class);
+    }
 }
