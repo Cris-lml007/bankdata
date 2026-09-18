@@ -11,6 +11,7 @@ Auth::routes();
 
 
 Route::prefix('/dashboard')->group(function(){
+    Route::livewire('/','pages::dashboard.index')->name('dashboard');
     Route::livewire('/products','pages::product.index')->name('dashboard.products');
     Route::livewire('/product/{product}','pages::product.view')->name('dashboard.products.view');
     Route::livewire('/categories','pages::category.index')->name('dashboard.categories');

@@ -63,7 +63,7 @@ return [
     |
     */
 
-    'logo' => '<b>Admin</b>LTE',
+    'logo' => '<b>All</b>Poliuretano',
     'logo_img' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
     'logo_img_class' => 'brand-image img-circle elevation-3',
     'logo_img_xl' => null,
@@ -257,7 +257,7 @@ return [
     */
 
     'use_route_url' => false,
-    'dashboard_url' => 'home',
+    'dashboard_url' => 'dashboard',
     'logout_url' => 'logout',
     'login_url' => 'login',
     'register_url' => 'register',
@@ -307,7 +307,11 @@ return [
         | Catálogo
         |--------------------------------------------------------------------------
         */
-
+        [
+            'text' => 'Dashboard',
+            'route' => 'dashboard',
+            'icon' => 'fas fa-tachometer-alt',
+        ],
         [
             'header' => 'Catalogo',
         ],
@@ -325,12 +329,12 @@ return [
         ],
 
         [
-            'text' => 'Tipos de fábrica',
+            'text' => 'Tipos de Areas',
             'route' => 'dashboard.type-factories',
             'icon' => 'fas fa-fw fa-industry',
         ],
         [
-            'text' => 'Fábricas',
+            'text' => 'Areas',
             'route' => 'dashboard.industries',
             'icon' => 'fas fa-fw fa-building',
         ],

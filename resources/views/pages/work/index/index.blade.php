@@ -97,23 +97,34 @@
                                 @if ($task['priority'] === 1)
 
                                     <span class="badge badge-danger">
-                                        Prioridad 1 - Alta
-                                    </span>
+        1 - Muy alta
+    </span>
+
+                                @elseif ($task['priority'] === 2)
+
+                                    <span class="badge badge-warning">
+        2 - Alta
+    </span>
+
+                                @elseif ($task['priority'] === 3)
+
+                                    <span class="badge badge-info">
+        3 - Media
+    </span>
+
+                                @elseif ($task['priority'] === 4)
+
+                                    <span class="badge badge-secondary">
+        4 - Baja
+    </span>
 
                                 @elseif ($task['priority'] === 5)
 
-                                    <span class="badge badge-secondary">
-                                        Prioridad 5 - Normal
-                                    </span>
-
-                                @else
-
-                                    <span class="badge badge-warning">
-                                        Prioridad {{ $task['priority'] }}
-                                    </span>
+                                    <span class="badge badge-success border">
+        5 - Normal
+    </span>
 
                                 @endif
-
 
                                 <div class="mt-1">
 
@@ -392,23 +403,34 @@
                                 @if ($task['priority'] === 1)
 
                                     <span class="badge badge-danger">
-                                        Prioridad 1 - Alta
-                                    </span>
+        1 - Muy alta
+    </span>
+
+                                @elseif ($task['priority'] === 2)
+
+                                    <span class="badge badge-warning">
+        2 - Alta
+    </span>
+
+                                @elseif ($task['priority'] === 3)
+
+                                    <span class="badge badge-info">
+        3 - Media
+    </span>
+
+                                @elseif ($task['priority'] === 4)
+
+                                    <span class="badge badge-secondary">
+        4 - Baja
+    </span>
 
                                 @elseif ($task['priority'] === 5)
 
-                                    <span class="badge badge-secondary">
-                                        Prioridad 5 - Normal
-                                    </span>
-
-                                @else
-
-                                    <span class="badge badge-warning">
-                                        Prioridad {{ $task['priority'] }}
-                                    </span>
+                                    <span class="badge badge-success border">
+        5 - Normal
+    </span>
 
                                 @endif
-
 
                                 <div class="mt-1">
 

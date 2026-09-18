@@ -1,13 +1,13 @@
 <x-slot name="header">
 
-    <h1>Fábricas</h1>
+    <h1>Areas</h1>
 
     <a
         href="{{ route('dashboard.industries.register') }}"
         class="btn btn-primary"
     >
         <i class="fa fa-plus"></i>
-        Nueva Fábrica
+        Nueva Area
     </a>
 
 </x-slot>

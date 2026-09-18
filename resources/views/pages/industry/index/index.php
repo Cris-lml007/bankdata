@@ -52,7 +52,7 @@ new class extends Component
         $heads = [
             'N°' => 'id',
             'Nombre' => 'name',
-            'Tipo de fábrica' => null,
+            'Tipo de Area' => null,
             'Dirección' => 'address',
             'Teléfono' => 'phone',
             'Acciones' => null,

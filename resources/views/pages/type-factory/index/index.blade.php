@@ -1,5 +1,5 @@
 <x-slot name="header">
-    <h1>Tipos de Fábrica</h1>
+    <h1>Tipos de Area</h1>
 
     <button
         data-bs-toggle="modal"

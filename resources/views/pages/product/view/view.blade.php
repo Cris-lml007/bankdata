@@ -104,14 +104,14 @@
                         <div class="col-md-6">
                             <div class="form-group">
 
-                                <label>Tipo de fábrica</label>
+                                <label>Tipo de Area de Ensamblaje</label>
 
                                 <select
                                     class="form-control @error('productData.type_factory_id') is-invalid @enderror"
                                     wire:model="productData.type_factory_id"
                                 >
                                     <option value="">
-                                        Seleccione un tipo de fábrica
+                                        Seleccione un tipo de Area
                                     </option>
 
                                     @foreach ($typeFactories as $typeFactory)
@@ -222,7 +222,7 @@
                     </div>
 
                     <div class="col-md-6">
-                        <strong>Tipo de fábrica</strong>
+                        <strong>Tipo de Area de Ensamblaje</strong>
                         <p>{{ $product->typeFactory?->name ?? 'Sin asignar' }}</p>
                     </div>
 
@@ -421,14 +421,14 @@
                     <div class="col-md-6">
                         <div class="form-group">
 
-                            <label>Tipo de fábrica</label>
+                            <label>Tipo de Area</label>
 
                             <select
                                 class="form-control @error('component.type_factory_id') is-invalid @enderror"
                                 wire:model="component.type_factory_id"
                             >
                                 <option value="">
-                                    Seleccione un tipo de fábrica
+                                    Seleccione un tipo de Area
                                 </option>
 
                                 @foreach ($typeFactories as $typeFactory)
