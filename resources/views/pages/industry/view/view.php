@@ -62,7 +62,7 @@ new class extends Component
                 'required|string|max:255',
 
             'industryData.type_factory_id' =>
-                'required|exists:types_factories,id',
+                'required|exists:type_factories,id',
 
             'industryData.address' =>
                 'nullable|string|max:255',
