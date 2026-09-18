@@ -18,6 +18,10 @@ class ComponentProduct extends Model
         return $this->belongsTo(TypeFactory::class);
     }
 
+    public function tagProducts(){
+        return $this->hasmany(TagProduct::class,'product_id','product_id');
+    }
+
     public function assemblyComponents()
     {
         return $this->hasMany(

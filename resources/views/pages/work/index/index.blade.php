@@ -1,5 +1,6 @@
 <div class="container-fluid">
 
+    {{-- ENCABEZADO --}}
     <div class="row mb-3">
         <div class="col-12">
             <h4 class="mb-1">
@@ -20,6 +21,7 @@
     @if (count($assemblies))
 
         <div class="card card-primary">
+
             <div class="card-header">
                 <h3 class="card-title">
                     Ensamblajes
@@ -35,11 +37,43 @@
                         {{-- CABECERA --}}
                         <div class="d-flex justify-content-between align-items-start">
 
-                            <div>
+                            <div class="pr-3">
 
                                 <h5 class="mb-1">
                                     {{ $task['product_name'] }}
                                 </h5>
+
+                                {{-- DESCRIPCIÓN --}}
+                                @if ($task['product_description'])
+
+                                    <p class="text-muted mb-2">
+                                        {{ $task['product_description'] }}
+                                    </p>
+
+                                @endif
+
+                                {{-- TAGS --}}
+                                @if (count($task['product_tags']))
+
+                                    <div class="mb-2">
+
+                                        @foreach ($task['product_tags'] as $tag)
+
+                                            <span class="badge badge-light text-dark border mr-1 mb-1">
+
+                                                <strong>
+                                                    {{ $tag['name'] }}:
+                                                </strong>
+
+                                                {{ $tag['value'] }}
+
+                                            </span>
+
+                                        @endforeach
+
+                                    </div>
+
+                                @endif
 
                                 <div class="text-muted">
                                     Contrato #{{ $task['contract_id'] }}
@@ -47,6 +81,7 @@
 
                                 <div class="text-muted">
                                     Entrega:
+
                                     {{ $task['delivery_date']
                                         ? \Carbon\Carbon::parse($task['delivery_date'])->format('d/m/Y')
                                         : 'Sin fecha'
@@ -55,21 +90,48 @@
 
                             </div>
 
-                            <div>
 
-                                @if ($task['status_value'] === \App\Enums\Status::FINISH->value)
+                            {{-- PRIORIDAD + ESTADO --}}
+                            <div class="text-right">
 
-                                    <span class="badge badge-success">
-                                        Finalizado
+                                @if ($task['priority'] === 1)
+
+                                    <span class="badge badge-danger">
+                                        Prioridad 1 - Alta
+                                    </span>
+
+                                @elseif ($task['priority'] === 5)
+
+                                    <span class="badge badge-secondary">
+                                        Prioridad 5 - Normal
                                     </span>
 
                                 @else
 
                                     <span class="badge badge-warning">
-                                        En proceso
+                                        Prioridad {{ $task['priority'] }}
                                     </span>
 
                                 @endif
+
+
+                                <div class="mt-1">
+
+                                    @if ($task['status_value'] === \App\Enums\Status::FINISH->value)
+
+                                        <span class="badge badge-success">
+                                            Finalizado
+                                        </span>
+
+                                    @else
+
+                                        <span class="badge badge-warning">
+                                            En proceso
+                                        </span>
+
+                                    @endif
+
+                                </div>
 
                             </div>
 
@@ -86,12 +148,17 @@
                                 </span>
 
                                 <strong>
-                                    {{ $task['progress'] }} / {{ $task['quantity'] }}
+                                    {{ $task['progress'] }}
+                                    /
+                                    {{ $task['quantity'] }}
                                 </strong>
 
                             </div>
 
-                            <div class="progress" style="height: 20px;">
+                            <div
+                                class="progress"
+                                style="height: 20px;"
+                            >
 
                                 <div
                                     class="progress-bar"
@@ -106,10 +173,11 @@
                         </div>
 
 
-                        {{-- INFORMACIÓN --}}
+                        {{-- RESUMEN --}}
                         <div class="row mt-3">
 
                             <div class="col-md-4">
+
                                 <small class="text-muted d-block">
                                     Requerido
                                 </small>
@@ -117,9 +185,11 @@
                                 <strong>
                                     {{ $task['quantity'] }}
                                 </strong>
+
                             </div>
 
                             <div class="col-md-4">
+
                                 <small class="text-muted d-block">
                                     Avance
                                 </small>
@@ -127,9 +197,11 @@
                                 <strong>
                                     {{ $task['progress'] }}
                                 </strong>
+
                             </div>
 
                             <div class="col-md-4">
+
                                 <small class="text-muted d-block">
                                     Pendiente
                                 </small>
@@ -137,17 +209,21 @@
                                 <strong>
                                     {{ $task['pending'] }}
                                 </strong>
+
                             </div>
 
                         </div>
 
 
                         {{-- REGISTRAR AVANCE --}}
-                        @if ($task['status_value'] !== \App\Enums\Status::FINISH->value)
+                        @if (
+                            $task['status_value']
+                            !== \App\Enums\Status::FINISH->value
+                        )
 
                             <div class="row mt-3">
 
-                                <div class="col-md-4">
+                                <div class="col-md-5">
 
                                     <label>
                                         Registrar avance
@@ -181,9 +257,11 @@
                                     </div>
 
                                     @error("progressInputs.assembly-{$task['id']}")
+
                                     <small class="text-danger">
                                         {{ $message }}
                                     </small>
+
                                     @enderror
 
                                 </div>
@@ -217,9 +295,11 @@
                 @endforeach
 
             </div>
+
         </div>
 
     @endif
+
 
 
     {{-- ========================================================= --}}
@@ -245,11 +325,45 @@
                         {{-- CABECERA --}}
                         <div class="d-flex justify-content-between align-items-start">
 
-                            <div>
+                            <div class="pr-3">
 
                                 <h5 class="mb-1">
                                     {{ $task['component_name'] }}
                                 </h5>
+
+                                {{-- DESCRIPCIÓN DE LA PIEZA --}}
+                                @if ($task['component_description'])
+
+                                    <p class="text-muted mb-2">
+                                        {{ $task['component_description'] }}
+                                    </p>
+
+                                @endif
+
+
+                                {{-- TAGS DE LA PIEZA --}}
+                                @if (count($task['component_tags']))
+
+                                    <div class="mb-2">
+
+                                        @foreach ($task['component_tags'] as $tag)
+
+                                            <span class="badge badge-light text-dark border mr-1 mb-1">
+
+                                                <strong>
+                                                    {{ $tag['name'] }}:
+                                                </strong>
+
+                                                {{ $tag['value'] }}
+
+                                            </span>
+
+                                        @endforeach
+
+                                    </div>
+
+                                @endif
+
 
                                 <div class="text-muted">
                                     Producto:
@@ -262,6 +376,7 @@
 
                                 <div class="text-muted">
                                     Entrega:
+
                                     {{ $task['delivery_date']
                                         ? \Carbon\Carbon::parse($task['delivery_date'])->format('d/m/Y')
                                         : 'Sin fecha'
@@ -270,21 +385,48 @@
 
                             </div>
 
-                            <div>
 
-                                @if ($task['status_value'] === \App\Enums\Status::FINISH->value)
+                            {{-- PRIORIDAD + ESTADO --}}
+                            <div class="text-right">
 
-                                    <span class="badge badge-success">
-                                        Finalizado
+                                @if ($task['priority'] === 1)
+
+                                    <span class="badge badge-danger">
+                                        Prioridad 1 - Alta
+                                    </span>
+
+                                @elseif ($task['priority'] === 5)
+
+                                    <span class="badge badge-secondary">
+                                        Prioridad 5 - Normal
                                     </span>
 
                                 @else
 
                                     <span class="badge badge-warning">
-                                        En proceso
+                                        Prioridad {{ $task['priority'] }}
                                     </span>
 
                                 @endif
+
+
+                                <div class="mt-1">
+
+                                    @if ($task['status_value'] === \App\Enums\Status::FINISH->value)
+
+                                        <span class="badge badge-success">
+                                            Finalizado
+                                        </span>
+
+                                    @else
+
+                                        <span class="badge badge-warning">
+                                            En proceso
+                                        </span>
+
+                                    @endif
+
+                                </div>
 
                             </div>
 
@@ -301,12 +443,17 @@
                                 </span>
 
                                 <strong>
-                                    {{ $task['progress'] }} / {{ $task['quantity'] }}
+                                    {{ $task['progress'] }}
+                                    /
+                                    {{ $task['quantity'] }}
                                 </strong>
 
                             </div>
 
-                            <div class="progress" style="height: 20px;">
+                            <div
+                                class="progress"
+                                style="height: 20px;"
+                            >
 
                                 <div
                                     class="progress-bar"
@@ -321,10 +468,11 @@
                         </div>
 
 
-                        {{-- INFORMACIÓN --}}
+                        {{-- RESUMEN --}}
                         <div class="row mt-3">
 
                             <div class="col-md-4">
+
                                 <small class="text-muted d-block">
                                     Requerido
                                 </small>
@@ -332,9 +480,11 @@
                                 <strong>
                                     {{ $task['quantity'] }}
                                 </strong>
+
                             </div>
 
                             <div class="col-md-4">
+
                                 <small class="text-muted d-block">
                                     Avance
                                 </small>
@@ -342,9 +492,11 @@
                                 <strong>
                                     {{ $task['progress'] }}
                                 </strong>
+
                             </div>
 
                             <div class="col-md-4">
+
                                 <small class="text-muted d-block">
                                     Pendiente
                                 </small>
@@ -352,17 +504,21 @@
                                 <strong>
                                     {{ $task['pending'] }}
                                 </strong>
+
                             </div>
 
                         </div>
 
 
                         {{-- REGISTRAR AVANCE --}}
-                        @if ($task['status_value'] !== \App\Enums\Status::FINISH->value)
+                        @if (
+                            $task['status_value']
+                            !== \App\Enums\Status::FINISH->value
+                        )
 
                             <div class="row mt-3">
 
-                                <div class="col-md-4">
+                                <div class="col-md-5">
 
                                     <label>
                                         Registrar avance
@@ -396,9 +552,11 @@
                                     </div>
 
                                     @error("progressInputs.component-{$task['id']}")
+
                                     <small class="text-danger">
                                         {{ $message }}
                                     </small>
+
                                     @enderror
 
                                 </div>
@@ -432,12 +590,17 @@
                 @endforeach
 
             </div>
+
         </div>
 
     @endif
 
 
+
+    {{-- ========================================================= --}}
     {{-- SIN TAREAS --}}
+    {{-- ========================================================= --}}
+
     @if (!count($assemblies) && !count($assemblyComponents))
 
         <div class="card">
