@@ -1,6 +1,6 @@
 <x-slot name="header">
 
-    <h1>Fábrica #{{ $industry->id }}</h1>
+    <h1>Area #{{ $industry->id }}</h1>
 
 </x-slot>
 
@@ -40,7 +40,7 @@
 
             <h3 class="card-title">
                 <i class="fa fa-industry"></i>
-                Datos de la fábrica
+                Datos de Area
             </h3>
 
         </div>
@@ -77,7 +77,7 @@
 
                         <div class="form-group">
 
-                            <label>Tipo de fábrica</label>
+                            <label>Tipo de Area</label>
 
                             <select
                                 wire:model="industryData.type_factory_id"
@@ -218,7 +218,7 @@
 
             <h3 class="card-title">
                 <i class="fa fa-users"></i>
-                Usuarios de la fábrica
+                Usuarios de Area
             </h3>
 
         </div>
@@ -276,7 +276,7 @@
                     <i class="fa fa-users fa-2x mb-2"></i>
 
                     <p class="mb-0">
-                        No hay usuarios asignados a esta fábrica.
+                        No hay usuarios asignados a esta Area.
                     </p>
 
                 </div>
@@ -385,7 +385,7 @@
                     <i class="fa fa-file-signature fa-2x mb-2"></i>
 
                     <p class="mb-0">
-                        No hay contratos relacionados con esta fábrica.
+                        No hay contratos relacionados con esta Area.
                     </p>
 
                 </div>
@@ -597,7 +597,7 @@
                     class="btn btn-danger"
                 >
                     <i class="fa fa-trash"></i>
-                    Eliminar fábrica
+                    Eliminar Area
                 </button>
 
             </div>
