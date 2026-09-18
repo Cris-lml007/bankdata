@@ -68,7 +68,7 @@
 
                 <div class="col-md-6">
                     <div class="form-group">
-                        <label for="type_factory_id">Tipo de fábrica</label>
+                        <label for="type_factory_id">Tipo de Area Final</label>
 
                         <select
                             id="type_factory_id"

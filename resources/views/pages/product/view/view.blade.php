@@ -386,7 +386,7 @@
 
             <h3 class="card-title">
                 <i class="fa fa-cubes"></i>
-                Componentes
+                Proceso de Producción
             </h3>
 
         </div>
@@ -417,28 +417,6 @@
                         </div>
                     </div>
 
-                    <div class="col-md-6">
-                        <div class="form-group">
-
-                            <label>Cantidad por producto</label>
-
-                            <input
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                class="form-control @error('component.quantity') is-invalid @enderror"
-                                wire:model="component.quantity"
-                                placeholder="Ej. 1"
-                            >
-
-                            @error('component.quantity')
-                            <div class="invalid-feedback">
-                                {{ $message }}
-                            </div>
-                            @enderror
-
-                        </div>
-                    </div>
 
                     <div class="col-md-6">
                         <div class="form-group">
@@ -472,7 +450,7 @@
                         </div>
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="col-md-12">
                         <div class="form-group">
 
                             <label>Descripción</label>
@@ -530,7 +508,6 @@
                         <thead>
                         <tr>
                             <th>Componente</th>
-                            <th>Cantidad</th>
                             <th>Tipo de fábrica</th>
                             <th>Descripción</th>
                             <th>Acciones</th>
@@ -545,10 +522,6 @@
 
                                 <td>
                                     {{ $component->name }}
-                                </td>
-
-                                <td>
-                                    {{ $component->quantity }}
                                 </td>
 
                                 <td>

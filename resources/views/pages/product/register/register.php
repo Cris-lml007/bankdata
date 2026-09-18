@@ -32,7 +32,7 @@ new class extends Component
 
         $this->resetProduct();
 
-        return $this->redirectRoute('dashboard.type-factories');
+        return $this->redirectRoute('dashboard.products');
     }
 
     public function resetProduct()

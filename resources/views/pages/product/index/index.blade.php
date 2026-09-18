@@ -10,7 +10,7 @@
             <td>{{ $product->cod }}</td>
             <td>{{ $product->name }}</td>
             <td>{{ $product->model }}</td>
-            <td>{{ $product->price_sale }}</td>
+            <td>{{ Number::format($product->price_sale,2) }}</td>
             <td>
                 <a href="{{ route('dashboard.products.view',$product->id) }}" class="btn btn-primary"><i class="fa fa-eye"></i></a>
             </td>

@@ -200,7 +200,7 @@ new class extends Component
         $this->validate([
             'component.name' => 'required|string|max:255',
             'component.description' => 'nullable|string',
-            'component.quantity' => 'required|numeric|min:0',
+            'component.quantity' => 'numeric|min:0',
             'component.type_factory_id' => 'required|exists:type_factories,id',
         ]);
 
@@ -239,7 +239,7 @@ new class extends Component
         $this->validate([
             'component.name' => 'required|string|max:255',
             'component.description' => 'nullable|string',
-            'component.quantity' => 'required|numeric|min:0',
+            'component.quantity' => 'numeric|min:0',
             'component.type_factory_id' => 'required|exists:type_factories,id',
         ]);
 

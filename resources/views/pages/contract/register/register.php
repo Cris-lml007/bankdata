@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\TypePayment;
 use App\Models\Contract;
 use App\Models\Customer;
 use App\Models\Product;
@@ -10,6 +11,9 @@ new class extends Component
     public $contract = [
         'customer_id' => '',
         'delivery_date' => '',
+        'destination' => '',
+        'method_payment' => '',
+        'priority' => 5,
     ];
 
     public $customer = [
@@ -37,13 +41,14 @@ new class extends Component
     public function mount()
     {
         $this->contract['delivery_date'] = now()->format('Y-m-d');
+        $this->contract['method_payment'] = TypePayment::NONE->value;
+        $this->contract['priority'] = 5;
     }
 
     public function searchCustomer()
     {
         $ciNit = trim($this->customer['ci_nit']);
 
-        // Si se limpia el CI/NIT, el contrato será para cliente anónimo
         if ($ciNit === '') {
             $this->contract['customer_id'] = '';
 
@@ -162,6 +167,13 @@ new class extends Component
     {
         $this->validate([
             'contract.delivery_date' => 'required|date',
+            'contract.destination' => 'nullable|string|max:255',
+            'contract.method_payment' => [
+                'required',
+                'integer',
+                \Illuminate\Validation\Rule::enum(TypePayment::class),
+            ],
+            'contract.priority' => 'required|integer|between:1,5',
 
             'customer.ci_nit' => 'nullable|string|max:255',
             'customer.name' => 'nullable|string|max:255',
@@ -181,16 +193,6 @@ new class extends Component
 
         $customer = null;
 
-        /*
-         * Si existe CI/NIT:
-         *
-         * 1. Busca el cliente.
-         * 2. Si existe, actualiza sus datos.
-         * 3. Si no existe, crea uno nuevo.
-         *
-         * Si no existe CI/NIT:
-         * contrato anónimo.
-         */
         if (trim($this->customer['ci_nit']) !== '') {
 
             $customer = Customer::updateOrCreate(
@@ -209,6 +211,9 @@ new class extends Component
         $contract = Contract::create([
             'customer_id' => $customer?->id,
             'delivery_date' => $this->contract['delivery_date'],
+            'destination' => $this->contract['destination'] ?: null,
+            'method_payment' => $this->contract['method_payment'],
+            'priority' => $this->contract['priority'],
             'status' => \App\Enums\Status::ACTIVE,
         ]);
 

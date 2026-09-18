@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\Status;
+use App\Enums\TypePayment;
 use Illuminate\Database\Eloquent\Model;
 
 class Contract extends Model
@@ -11,6 +12,9 @@ class Contract extends Model
         'customer_id',
         'status',
         'delivery_date',
+        'destination',
+        'method_payment',
+        'priority',
     ];
 
     public function customer()
@@ -38,6 +42,7 @@ class Contract extends Model
     {
         return [
             'status' => Status::class,
+            'method_payment' => TypePayment::class,
         ];
     }
 }

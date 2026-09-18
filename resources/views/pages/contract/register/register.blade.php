@@ -204,6 +204,7 @@
 
             <div class="row">
 
+                {{-- Fecha de entrega --}}
                 <div class="col-md-4">
 
                     <div class="form-group">
@@ -218,8 +219,99 @@
 
                         @error('contract.delivery_date')
                         <span class="invalid-feedback">
-                                {{ $message }}
-                            </span>
+                            {{ $message }}
+                        </span>
+                        @enderror
+
+                    </div>
+
+                </div>
+
+
+                {{-- Destino --}}
+                <div class="col-md-4">
+
+                    <div class="form-group">
+
+                        <label>Destino</label>
+
+                        <input
+                            type="text"
+                            wire:model="contract.destination"
+                            class="form-control @error('contract.destination') is-invalid @enderror"
+                            placeholder="Destino del contrato"
+                        >
+
+                        @error('contract.destination')
+                        <span class="invalid-feedback">
+                            {{ $message }}
+                        </span>
+                        @enderror
+
+                    </div>
+
+                </div>
+
+
+                {{-- Método de pago --}}
+                <div class="col-md-4">
+
+                    <div class="form-group">
+
+                        <label>Método de pago</label>
+
+                        <select
+                            wire:model="contract.method_payment"
+                            class="form-control @error('contract.method_payment') is-invalid @enderror"
+                        >
+
+                            @foreach (\App\Enums\TypePayment::cases() as $method)
+                                <option value="{{ $method->value }}">
+                                    {{ $method->label() }}
+                                </option>
+                            @endforeach
+
+                        </select>
+
+                        @error('contract.method_payment')
+                        <span class="invalid-feedback">
+                            {{ $message }}
+                        </span>
+                        @enderror
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="row">
+
+                {{-- Prioridad --}}
+                <div class="col-md-4">
+
+                    <div class="form-group">
+
+                        <label>Prioridad</label>
+
+                        <select
+                            wire:model="contract.priority"
+                            class="form-control @error('contract.priority') is-invalid @enderror"
+                        >
+
+                            <option value="1">1 - Alta</option>
+                            <option value="2">2 - Urgente</option>
+                            <option value="3">3 - Media</option>
+                            <option value="4">4 - Baja</option>
+                            <option value="5">5 - Normal</option>
+
+                        </select>
+
+                        @error('contract.priority')
+                        <span class="invalid-feedback">
+                            {{ $message }}
+                        </span>
                         @enderror
 
                     </div>
@@ -230,7 +322,6 @@
 
         </div>
     </div>
-
 
     {{-- Agregar producto --}}
     <div class="card">

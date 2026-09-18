@@ -16,6 +16,9 @@ return new class extends Migration
             $table->unsignedInteger('customer_id')->nullable();
             $table->unsignedInteger('quotation_id')->nullable();
             $table->date('delivery_date')->nullable();
+            $table->string('destination')->nullable();
+            $table->enum('method_payment',\App\Enums\TypePayment::cases())->default(\App\Enums\TypePayment::NONE);
+            $table->integer('priority')->default(5);
             $table->enum('status', \App\Enums\Status::cases())->default(\App\Enums\Status::ACTIVE);
             $table->foreign('customer_id')->references('id')->on('customers')->onDelete('set null');
             $table->foreign('quotation_id')->references('id')->on('quotations')->onDelete('set null');

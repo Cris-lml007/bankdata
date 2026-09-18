@@ -15,7 +15,7 @@
             Volver
         </a>
 
-        @if (!$editingContract && $contract->status == \App\Enums\Status::DELIVERED)
+        @if (!$editingContract && $contract->status != \App\Enums\Status::DELIVERED)
 
             <div class="">
                 <a
@@ -308,7 +308,6 @@
 
     </div>
 
-
     {{-- Información del contrato --}}
     <div class="card">
 
@@ -326,11 +325,11 @@
             <div class="row">
 
                 {{-- Fecha de entrega --}}
-                <div class="col-md-4">
+                <div class="col-md-3">
 
                     <div class="form-group">
 
-                        <label>Fecha de entrega: Entregado</label>
+                        <label>Fecha de entrega</label>
 
                         @if ($editingContract)
 
@@ -342,8 +341,8 @@
 
                             @error('contractData.delivery_date')
                             <span class="invalid-feedback">
-                                    {{ $message }}
-                                </span>
+                                {{ $message }}
+                            </span>
                             @enderror
 
                         @else
@@ -352,7 +351,7 @@
 
                                 @if ($contract->delivery_date)
 
-                                {{ \Carbon\Carbon::parse($contract->delivery_date)->format('d/m/Y') }}:@if($contract->status == \App\Enums\Status::DELIVERED) {{ \Carbon\Carbon::parse($contract->updated_at)->format('d/m/Y') }}@else --- @endif
+                                    {{ \Carbon\Carbon::parse($contract->delivery_date)->format('d/m/Y') }}
 
                                 @else
 
@@ -368,6 +367,187 @@
 
                 </div>
 
+
+                {{-- Destino --}}
+                <div class="col-md-3">
+
+                    <div class="form-group">
+
+                        <label>Destino</label>
+
+                        @if ($editingContract)
+
+                            <input
+                                type="text"
+                                wire:model="contractData.destination"
+                                class="form-control @error('contractData.destination') is-invalid @enderror"
+                                placeholder="Destino"
+                            >
+
+                            @error('contractData.destination')
+                            <span class="invalid-feedback">
+                                {{ $message }}
+                            </span>
+                            @enderror
+
+                        @else
+
+                            <div class="text-muted">
+                                {{ $contract->destination ?: 'Sin especificar' }}
+                            </div>
+
+                        @endif
+
+                    </div>
+
+                </div>
+
+
+                {{-- Método de pago --}}
+                <div class="col-md-3">
+
+                    <div class="form-group">
+
+                        <label>Método de pago</label>
+
+                        @if ($editingContract)
+
+                            <select
+                                wire:model="contractData.method_payment"
+                                class="form-control @error('contractData.method_payment') is-invalid @enderror"
+                            >
+
+                                @foreach (\App\Enums\TypePayment::cases() as $method)
+
+                                    <option value="{{ $method->value }}">
+                                        {{ $method->name }}
+                                    </option>
+
+                                @endforeach
+
+                            </select>
+
+                            @error('contractData.method_payment')
+                            <span class="invalid-feedback">
+                                {{ $message }}
+                            </span>
+                            @enderror
+
+                        @else
+
+                            <div class="text-muted">
+
+                                @if ($contract->method_payment instanceof \App\Enums\TypePayment)
+
+                                    {{ $contract->method_payment->name }}
+
+                                @else
+
+                                    {{ $contract->method_payment }}
+
+                                @endif
+
+                            </div>
+
+                        @endif
+
+                    </div>
+
+                </div>
+
+
+                {{-- Prioridad --}}
+                <div class="col-md-3">
+
+                    <div class="form-group">
+
+                        <label>Prioridad</label>
+
+                        @if ($editingContract)
+
+                            <select
+                                wire:model="contractData.priority"
+                                class="form-control @error('contractData.priority') is-invalid @enderror"
+                            >
+
+                                <option value="1">
+                                    1 - Alta
+                                </option>
+
+                                <option value="2">
+                                    2 - Urgente
+                                </option>
+
+                                <option value="3">
+                                    3 - Media
+                                </option>
+
+                                <option value="4">
+                                    4 - Baja
+                                </option>
+
+                                <option value="5">
+                                    5 - Normal
+                                </option>
+
+                            </select>
+
+                            @error('contractData.priority')
+                            <span class="invalid-feedback">
+                                {{ $message }}
+                            </span>
+                            @enderror
+
+                        @else
+
+                            <div>
+
+                                @switch($contract->priority)
+
+                                    @case(1)
+                                        <span class="badge badge-danger">
+                                        1 - Alta
+                                    </span>
+                                        @break
+
+                                    @case(2)
+                                        <span class="badge badge-warning">
+                                        2 - Urgente
+                                    </span>
+                                        @break
+
+                                    @case(3)
+                                        <span class="badge badge-info">
+                                        3 - Media
+                                    </span>
+                                        @break
+
+                                    @case(4)
+                                        <span class="badge badge-secondary">
+                                        4 - Baja
+                                    </span>
+                                        @break
+
+                                    @default
+                                        <span class="badge badge-success">
+                                        5 - Normal
+                                    </span>
+
+                                @endswitch
+
+                            </div>
+
+                        @endif
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="row">
+
                 {{-- Estado --}}
                 <div class="col-md-4">
 
@@ -376,14 +556,15 @@
                         <label>Estado</label>
 
                         <div>
-            <span class="badge {{ $contract->status->badgeClass() }}">
-                {{ $contract->status->label() }}
-            </span>
+                        <span class="badge {{ $contract->status->badgeClass() }}">
+                            {{ $contract->status->label() }}
+                        </span>
                         </div>
 
                     </div>
 
                 </div>
+
 
                 {{-- Cotización --}}
                 <div class="col-md-4">
@@ -416,37 +597,88 @@
 
                 </div>
 
+
+                {{-- Entrega --}}
+                <div class="col-md-4">
+
+                    <div class="form-group">
+
+                        <label>Entrega</label>
+
+                        <div class="text-muted">
+
+                            @if ($contract->status === \App\Enums\Status::DELIVERED)
+
+                                <i class="fas fa-check text-success"></i>
+
+                                Entregado el
+                                {{ $contract->updated_at->format('d/m/Y') }}
+
+                            @elseif ($contract->delivery_date)
+
+                                Fecha prevista:
+                                {{ \Carbon\Carbon::parse($contract->delivery_date)->format('d/m/Y') }}
+
+                            @else
+
+                                Sin fecha
+
+                            @endif
+
+                        </div>
+
+                    </div>
+
+                </div>
+
             </div>
 
         </div>
 
     </div>
 
+    {{-- Producción --}}
     <div class="card card-primary">
 
         <div class="card-header">
+
             <h3 class="card-title">
-                Progreso de producción
+                <i class="fas fa-project-diagram"></i>
+                Fabricación
             </h3>
+
         </div>
 
         <div class="card-body">
 
-            <div class="d-flex justify-content-between mb-1">
-                <strong>
-                    Producción total
-                </strong>
 
-                <span>
-                {{ $productionCompleted }} / {{ $productionTotal }}
-                ({{ $productionPercentage }}%)
-            </span>
-            </div>
+            {{-- Progreso general --}}
+            <div class="mb-4">
 
-            <div class="progress mb-4" style="height: 25px;">
+                <div class="d-flex justify-content-between mb-1">
+
+                    <strong>
+                        Producción total
+                    </strong>
+
+                    <span>
+                    {{ $productionCompleted }}
+                    /
+                    {{ $productionTotal }}
+
+                    ({{ $productionPercentage }}%)
+                </span>
+
+                </div>
+
 
                 <div
-                    class="progress-bar
+                    class="progress"
+                    style="height: 25px;"
+                >
+
+                    <div
+                        class="progress-bar
                     @if ($productionPercentage >= 100)
                         bg-success
                     @elseif ($productionPercentage > 0)
@@ -454,62 +686,320 @@
                     @else
                         bg-secondary
                     @endif"
-                    role="progressbar"
-                    style="width: {{ $productionPercentage }}%;"
-                >
-                    {{ $productionPercentage }}%
+                        role="progressbar"
+                        style="width: {{ $productionPercentage }}%;"
+                    >
+                        {{ $productionPercentage }}%
+                    </div>
+
                 </div>
 
             </div>
 
-            @foreach ($productionProgress as $item)
 
-                <div class="mb-4">
+            @forelse ($productionTree as $productIndex => $product)
 
-                    <div class="d-flex justify-content-between mb-1">
+                {{-- PRODUCTO --}}
+                <div
+                    class="card card-outline card-secondary mb-3"
+                >
 
-                        <strong>
-                            {{ $item['product_name'] }}
-                        </strong>
+                    <div class="card-header">
 
-                        <span>
-                        {{ $item['completed'] }}
-                        /
-                        {{ $item['required'] }}
-                    </span>
+                        <h3 class="card-title">
 
-                    </div>
+                            <i class="fas fa-box"></i>
 
-                    <div class="progress" style="height: 20px;">
+                            {{ $product['product_name'] }}
 
-                        <div
-                            class="progress-bar
-                            @if ($item['percentage'] >= 100)
-                                bg-success
-                            @elseif ($item['percentage'] > 0)
-                                bg-info
-                            @else
-                                bg-secondary
-                            @endif"
-                            role="progressbar"
-                            style="width: {{ $item['percentage'] }}%;"
-                        >
-                            {{ $item['percentage'] }}%
-                        </div>
+                            <small class="text-muted ml-2">
+                                Requerido:
+                                {{ $product['required'] }}
+                            </small>
+
+                        </h3>
 
                     </div>
 
-                    <small class="text-muted">
-                        Pendiente: {{ $item['pending'] }}
-                    </small>
+
+                    <div class="card-body p-2">
+
+
+                        @forelse ($product['assemblies'] as $assemblyIndex => $assembly)
+
+                            {{-- ENSAMBLAJE --}}
+                            <div
+                                class="border rounded mb-2"
+                                style="margin-left: 10px;"
+                            >
+
+                                <div
+                                    class="p-3 bg-light"
+                                >
+
+                                    <div class="row align-items-center">
+
+                                        <div class="col-md-4">
+
+                                            <strong>
+
+                                                <i class="fas fa-cubes"></i>
+
+                                                Ensamblaje
+                                                #{{ $assembly['id'] }}
+
+                                            </strong>
+
+                                            <br>
+
+                                            <small class="text-muted">
+
+                                                Fábrica:
+                                                <strong>
+                                                    {{ $assembly['industry_name'] }}
+                                                </strong>
+
+                                            </small>
+
+                                        </div>
+
+
+                                        <div class="col-md-3">
+
+                                            <small class="text-muted">
+                                                Producción
+                                            </small>
+
+                                            <br>
+
+                                            <strong>
+                                                {{ $assembly['progress'] }}
+                                                /
+                                                {{ $assembly['quantity'] }}
+                                            </strong>
+
+                                        </div>
+
+
+                                        <div class="col-md-3">
+
+                                            <div
+                                                class="progress"
+                                                style="height: 18px;"
+                                            >
+
+                                                <div
+                                                    class="progress-bar
+                                                @if ($assembly['percentage'] >= 100)
+                                                    bg-success
+                                                @elseif ($assembly['percentage'] > 0)
+                                                    bg-info
+                                                @else
+                                                    bg-secondary
+                                                @endif"
+                                                    style="width: {{ $assembly['percentage'] }}%;"
+                                                >
+                                                    {{ $assembly['percentage'] }}%
+                                                </div>
+
+                                            </div>
+
+                                            <small class="text-muted">
+
+                                                Pendiente:
+                                                {{ $assembly['pending'] }}
+
+                                            </small>
+
+                                        </div>
+
+
+                                        <div class="col-md-2 text-right">
+
+                                        <span
+                                            class="badge badge-{{ $assembly['state_class'] }}"
+                                        >
+                                            {{ $assembly['state'] }}
+                                        </span>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+
+                                {{-- COMPONENTES --}}
+                                <div class="p-3">
+
+                                    <div class="mb-2">
+
+                                        <strong>
+                                            <i class="fas fa-sitemap"></i>
+                                            Componentes
+                                        </strong>
+
+                                    </div>
+
+                                    @forelse ($assembly['components'] as $component)
+
+                                        <div
+                                            class="border-left border-info pl-3 py-2 mb-2"
+                                        >
+
+                                            <div class="row align-items-center">
+
+                                                {{-- Nombre --}}
+                                                <div class="col-md-3">
+
+                                                    <strong>
+                                                        <i class="fas fa-puzzle-piece"></i>
+
+                                                        {{ $component['name'] }}
+                                                    </strong>
+
+                                                </div>
+
+
+                                                {{-- Fábrica --}}
+                                                <div class="col-md-2">
+
+                                                    <small class="text-muted">
+                                                        Fábrica
+                                                    </small>
+
+                                                    <br>
+
+                                                    <span>
+                                                    {{ $component['industry_name'] }}
+                                                </span>
+
+                                                </div>
+
+
+                                                {{-- Cantidad --}}
+                                                <div class="col-md-2">
+
+                                                    <small class="text-muted">
+                                                        Producción
+                                                    </small>
+
+                                                    <br>
+
+                                                    <strong>
+
+                                                        {{ $component['progress'] }}
+
+                                                        /
+
+                                                        {{ $component['quantity'] }}
+
+                                                    </strong>
+
+                                                </div>
+
+
+                                                {{-- Barra --}}
+                                                <div class="col-md-3">
+
+                                                    <div
+                                                        class="progress"
+                                                        style="height: 18px;"
+                                                    >
+
+                                                        <div
+                                                            class="progress-bar
+                                                        @if ($component['percentage'] >= 100)
+                                                            bg-success
+                                                        @elseif ($component['percentage'] > 0)
+                                                            bg-info
+                                                        @else
+                                                            bg-secondary
+                                                        @endif"
+                                                            style="width: {{ $component['percentage'] }}%;"
+                                                        >
+                                                            {{ $component['percentage'] }}%
+                                                        </div>
+
+                                                    </div>
+
+                                                    <small class="text-muted">
+
+                                                        Pendiente:
+                                                        {{ $component['pending'] }}
+
+                                                    </small>
+
+                                                </div>
+
+
+                                                {{-- Estado --}}
+                                                <div class="col-md-2 text-right">
+
+                                                <span
+                                                    class="badge badge-{{ $component['state_class'] }}"
+                                                >
+                                                    {{ $component['state'] }}
+                                                </span>
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                    @empty
+
+                                        <div class="text-muted">
+
+                                            <i class="fas fa-info-circle"></i>
+
+                                            Este ensamblaje no tiene
+                                            componentes registrados.
+
+                                        </div>
+
+                                    @endforelse
+
+                                </div>
+
+                            </div>
+
+                        @empty
+
+                            <div class="alert alert-secondary mb-0">
+
+                                <i class="fas fa-info-circle"></i>
+
+                                Este producto todavía no ha sido
+                                planificado para fabricación.
+
+                            </div>
+
+                        @endforelse
+
+                    </div>
 
                 </div>
 
-            @endforeach
+            @empty
+
+                <div class="alert alert-secondary">
+
+                    <i class="fas fa-info-circle"></i>
+
+                    No hay información de fabricación
+                    para este contrato.
+
+                </div>
+
+            @endforelse
 
         </div>
 
     </div>
+
+
 
     {{-- Productos --}}
     <div class="card">
