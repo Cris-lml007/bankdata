@@ -443,7 +443,7 @@
                             @enderror
                         @else
                             <div class="text-muted">
-                                {{ $contract->industry->name }}
+                                {{ $contract?->industry?->name ?? '---'}}
                             </div>
                         @endif
                     </div>
