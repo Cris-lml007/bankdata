@@ -6,7 +6,6 @@
 
     {{-- Información del cliente --}}
     <div class="card">
-
         <div class="card-header">
             <h3 class="card-title">
                 <i class="fa fa-user"></i>
@@ -15,18 +14,14 @@
         </div>
 
         <div class="card-body">
-
             <div class="row">
 
                 {{-- CI / NIT --}}
                 <div class="col-md-5">
-
                     <div class="form-group">
-
                         <label>CI / NIT</label>
 
                         <div class="input-group">
-
                             <input
                                 type="text"
                                 wire:model="customer.ci_nit"
@@ -44,51 +39,38 @@
                                     Buscar
                                 </button>
                             </div>
-
                         </div>
 
                         @error('customer.ci_nit')
-                        <span class="invalid-feedback d-block">
+                            <span class="invalid-feedback d-block">
                                 {{ $message }}
                             </span>
                         @enderror
 
                         <div style="height: 21px;">
-
                             @if ($existingCustomer)
-
                                 <small class="text-success">
                                     <i class="fa fa-check-circle"></i>
                                     Cliente encontrado
                                 </small>
-
                             @elseif (trim($customer['ci_nit']) !== '')
-
                                 <small class="text-info">
                                     <i class="fa fa-info-circle"></i>
                                     Cliente nuevo
                                 </small>
-
                             @else
-
                                 <small class="text-muted">
                                     Si deja este campo vacío,
                                     el contrato será para cliente anónimo.
                                 </small>
-
                             @endif
-
                         </div>
-
                     </div>
-
                 </div>
 
                 {{-- Nombre --}}
                 <div class="col-md-7">
-
                     <div class="form-group">
-
                         <label>Nombre</label>
 
                         <input
@@ -99,13 +81,11 @@
                         >
 
                         @error('customer.name')
-                        <span class="invalid-feedback d-block">
+                            <span class="invalid-feedback d-block">
                                 {{ $message }}
                             </span>
                         @enderror
-
                     </div>
-
                 </div>
 
             </div>
@@ -114,9 +94,7 @@
 
                 {{-- Organización --}}
                 <div class="col-md-5">
-
                     <div class="form-group">
-
                         <label>Organización</label>
 
                         <input
@@ -127,20 +105,16 @@
                         >
 
                         @error('customer.organization')
-                        <span class="invalid-feedback d-block">
+                            <span class="invalid-feedback d-block">
                                 {{ $message }}
                             </span>
                         @enderror
-
                     </div>
-
                 </div>
 
                 {{-- Email --}}
                 <div class="col-md-3">
-
                     <div class="form-group">
-
                         <label>Email</label>
 
                         <input
@@ -151,20 +125,16 @@
                         >
 
                         @error('customer.email')
-                        <span class="invalid-feedback d-block">
+                            <span class="invalid-feedback d-block">
                                 {{ $message }}
                             </span>
                         @enderror
-
                     </div>
-
                 </div>
 
                 {{-- Teléfono --}}
                 <div class="col-md-4">
-
                     <div class="form-group">
-
                         <label>Teléfono</label>
 
                         <input
@@ -175,24 +145,20 @@
                         >
 
                         @error('customer.phone')
-                        <span class="invalid-feedback d-block">
+                            <span class="invalid-feedback d-block">
                                 {{ $message }}
                             </span>
                         @enderror
-
                     </div>
-
                 </div>
 
             </div>
-
         </div>
     </div>
 
 
     {{-- Información del contrato --}}
     <div class="card">
-
         <div class="card-header">
             <h3 class="card-title">
                 <i class="fa fa-file-signature"></i>
@@ -206,9 +172,7 @@
 
                 {{-- Fecha de entrega --}}
                 <div class="col-md-4">
-
                     <div class="form-group">
-
                         <label>Fecha de entrega</label>
 
                         <input
@@ -218,21 +182,16 @@
                         >
 
                         @error('contract.delivery_date')
-                        <span class="invalid-feedback">
-                            {{ $message }}
-                        </span>
+                            <span class="invalid-feedback d-block">
+                                {{ $message }}
+                            </span>
                         @enderror
-
                     </div>
-
                 </div>
-
 
                 {{-- Destino --}}
                 <div class="col-md-4">
-
                     <div class="form-group">
-
                         <label>Destino</label>
 
                         <input
@@ -243,89 +202,129 @@
                         >
 
                         @error('contract.destination')
-                        <span class="invalid-feedback">
-                            {{ $message }}
-                        </span>
+                            <span class="invalid-feedback d-block">
+                                {{ $message }}
+                            </span>
                         @enderror
-
                     </div>
-
                 </div>
-
 
                 {{-- Método de pago --}}
                 <div class="col-md-4">
-
                     <div class="form-group">
-
                         <label>Método de pago</label>
 
                         <select
                             wire:model="contract.method_payment"
                             class="form-control @error('contract.method_payment') is-invalid @enderror"
                         >
-
                             @foreach (\App\Enums\TypePayment::cases() as $method)
                                 <option value="{{ $method->value }}">
                                     {{ $method->label() }}
                                 </option>
                             @endforeach
-
                         </select>
 
                         @error('contract.method_payment')
-                        <span class="invalid-feedback">
-                            {{ $message }}
-                        </span>
+                            <span class="invalid-feedback d-block">
+                                {{ $message }}
+                            </span>
                         @enderror
-
                     </div>
-
                 </div>
 
             </div>
-
 
             <div class="row">
 
                 {{-- Prioridad --}}
                 <div class="col-md-4">
-
                     <div class="form-group">
-
                         <label>Prioridad</label>
 
                         <select
                             wire:model="contract.priority"
                             class="form-control @error('contract.priority') is-invalid @enderror"
                         >
-
                             <option value="1">1 - Alta</option>
                             <option value="2">2 - Urgente</option>
                             <option value="3">3 - Media</option>
                             <option value="4">4 - Baja</option>
                             <option value="5">5 - Normal</option>
-
                         </select>
 
                         @error('contract.priority')
-                        <span class="invalid-feedback">
-                            {{ $message }}
-                        </span>
+                            <span class="invalid-feedback d-block">
+                                {{ $message }}
+                            </span>
                         @enderror
-
                     </div>
+                </div>
 
+                {{-- ID de proforma externa --}}
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>ID de proforma externa</label>
+
+                        <input
+                            type="text"
+                            wire:model="contract.external_id"
+                            class="form-control @error('contract.external_id') is-invalid @enderror"
+                            placeholder="Ej. PROF-00125"
+                        >
+
+                        <small class="form-text text-muted">
+                            Identificador de la proforma del otro sistema.
+                        </small>
+
+                        @error('contract.external_id')
+                            <span class="invalid-feedback d-block">
+                                {{ $message }}
+                            </span>
+                        @enderror
+                    </div>
+                </div>
+
+                {{-- Área o sucursal --}}
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>Área / Sucursal</label>
+
+                        <select
+                            wire:model="contract.industry_id"
+                            class="form-control @error('contract.industry_id') is-invalid @enderror"
+                        >
+                            <option value="">
+                                Seleccione un área o sucursal
+                            </option>
+
+                            @foreach ($industries as $industry)
+                                <option value="{{ $industry->id }}">
+                                    {{ $industry->name }}
+                                </option>
+                            @endforeach
+                        </select>
+
+                        <small class="form-text text-muted">
+                            Permite identificar la sucursal responsable
+                            de la orden.
+                        </small>
+
+                        @error('contract.industry_id')
+                            <span class="invalid-feedback d-block">
+                                {{ $message }}
+                            </span>
+                        @enderror
+                    </div>
                 </div>
 
             </div>
-
         </div>
     </div>
 
+
     {{-- Agregar producto --}}
     <div class="card">
-
         <div class="card-header">
             <h3 class="card-title">
                 <i class="fa fa-plus"></i>
@@ -334,14 +333,11 @@
         </div>
 
         <div class="card-body">
-
             <div class="row">
 
                 {{-- Producto --}}
                 <div class="col-md-5">
-
                     <div class="form-group position-relative">
-
                         <label>Producto</label>
 
                         <input
@@ -353,65 +349,48 @@
                         >
 
                         @if (count($productResults))
-
                             <div
                                 class="list-group position-absolute w-100"
                                 style="z-index: 1000;"
                             >
-
                                 @foreach ($productResults as $product)
-
                                     <button
                                         type="button"
                                         wire:click="selectProduct({{ $product->id }})"
                                         class="list-group-item list-group-item-action text-left"
                                     >
-                                        <strong>
-                                            {{ $product->cod }}
-                                        </strong>
+                                        <strong>{{ $product->cod }}</strong>
 
                                         <span class="ml-2">
                                             {{ $product->name }}
                                         </span>
                                     </button>
-
                                 @endforeach
-
                             </div>
-
                         @endif
 
                         <div style="height: 21px;">
-
                             @if ($selectedProduct)
-
                                 <small class="text-muted">
                                     Producto:
                                     <strong>
                                         {{ $selectedProduct->cod }}
                                     </strong>
                                 </small>
-
                             @endif
-
                         </div>
 
                         @error('detail.product_id')
-                        <span class="invalid-feedback d-block">
+                            <span class="invalid-feedback d-block">
                                 {{ $message }}
                             </span>
                         @enderror
-
                     </div>
-
                 </div>
-
 
                 {{-- Cantidad --}}
                 <div class="col-md-2">
-
                     <div class="form-group">
-
                         <label>Cantidad</label>
 
                         <input
@@ -424,21 +403,16 @@
                         <div style="height: 21px;"></div>
 
                         @error('detail.quantity')
-                        <span class="invalid-feedback d-block">
+                            <span class="invalid-feedback d-block">
                                 {{ $message }}
                             </span>
                         @enderror
-
                     </div>
-
                 </div>
-
 
                 {{-- Precio --}}
                 <div class="col-md-3">
-
                     <div class="form-group">
-
                         <label>Precio unitario</label>
 
                         <input
@@ -453,36 +427,27 @@
                         >
 
                         <div style="height: 21px;">
-
                             @if ($selectedProduct)
-
                                 <small class="text-muted">
                                     Referencial:
                                     <strong>
                                         Bs {{ number_format($selectedProduct->price_sale, 2) }}
                                     </strong>
                                 </small>
-
                             @endif
-
                         </div>
 
                         @error('detail.price')
-                        <span class="invalid-feedback d-block">
+                            <span class="invalid-feedback d-block">
                                 {{ $message }}
                             </span>
                         @enderror
-
                     </div>
-
                 </div>
-
 
                 {{-- Botón --}}
                 <div class="col-md-2">
-
                     <div class="form-group">
-
                         <label>&nbsp;</label>
 
                         <button
@@ -495,20 +460,16 @@
                         </button>
 
                         <div style="height: 21px;"></div>
-
                     </div>
-
                 </div>
 
             </div>
-
         </div>
     </div>
 
 
     {{-- Productos --}}
     <div class="card">
-
         <div class="card-header">
             <h3 class="card-title">
                 <i class="fa fa-box"></i>
@@ -519,112 +480,80 @@
         <div class="card-body p-0">
 
             @error('products')
-            <div class="alert alert-danger m-3">
-                {{ $message }}
-            </div>
+                <div class="alert alert-danger m-3">
+                    {{ $message }}
+                </div>
             @enderror
 
             <div class="table-responsive">
-
                 <table class="table table-bordered table-hover mb-0">
 
                     <thead>
-                    <tr>
-                        <th>Código</th>
-                        <th>Producto</th>
-                        <th width="140">Cantidad</th>
-                        <th width="180">Precio unitario</th>
-                        <th width="180">Subtotal</th>
-                        <th width="80">Acción</th>
-                    </tr>
+                        <tr>
+                            <th>Código</th>
+                            <th>Producto</th>
+                            <th width="140">Cantidad</th>
+                            <th width="180">Precio unitario</th>
+                            <th width="180">Subtotal</th>
+                            <th width="80">Acción</th>
+                        </tr>
                     </thead>
 
                     <tbody>
-
-                    @forelse ($products as $index => $item)
-
-                        <tr wire:key="contract-product-{{ $index }}">
-
-                            <td>
-                                {{ $item['cod'] }}
-                            </td>
-
-                            <td>
-                                {{ $item['name'] }}
-                            </td>
-
-                            <td>
-                                {{ $item['quantity'] }}
-                            </td>
-
-                            <td>
-                                Bs {{ number_format($item['price'], 2) }}
-                            </td>
-
-                            <td>
-                                Bs {{ number_format(
+                        @forelse ($products as $index => $item)
+                            <tr wire:key="contract-product-{{ $index }}">
+                                <td>{{ $item['cod'] }}</td>
+                                <td>{{ $item['name'] }}</td>
+                                <td>{{ $item['quantity'] }}</td>
+                                <td>
+                                    Bs {{ number_format($item['price'], 2) }}
+                                </td>
+                                <td>
+                                    Bs {{ number_format(
                                         $item['quantity'] * $item['price'],
                                         2
                                     ) }}
-                            </td>
-
-                            <td>
-                                <button
-                                    type="button"
-                                    wire:click="removeProduct({{ $index }})"
-                                    class="btn btn-danger btn-sm"
-                                >
-                                    <i class="fa fa-trash"></i>
-                                </button>
-                            </td>
-
-                        </tr>
-
-                    @empty
-
-                        <tr>
-                            <td
-                                colspan="6"
-                                class="text-center text-muted py-4"
-                            >
-                                No hay productos agregados.
-                            </td>
-                        </tr>
-
-                    @endforelse
-
+                                </td>
+                                <td>
+                                    <button
+                                        type="button"
+                                        wire:click="removeProduct({{ $index }})"
+                                        class="btn btn-danger btn-sm"
+                                    >
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    No hay productos agregados.
+                                </td>
+                            </tr>
+                        @endforelse
                     </tbody>
 
                     @if (count($products))
-
                         <tfoot>
-
-                        <tr>
-
-                            <th colspan="4" class="text-right">
-                                Total
-                            </th>
-
-                            <th>
-                                Bs {{ number_format(
+                            <tr>
+                                <th colspan="4" class="text-right">
+                                    Total
+                                </th>
+                                <th>
+                                    Bs {{ number_format(
                                         collect($products)->sum(
                                             fn ($item) =>
                                                 $item['quantity'] * $item['price']
                                         ),
                                         2
                                     ) }}
-                            </th>
-
-                            <th></th>
-
-                        </tr>
-
+                                </th>
+                                <th></th>
+                            </tr>
                         </tfoot>
-
                     @endif
 
                 </table>
-
             </div>
         </div>
     </div>
@@ -632,7 +561,6 @@
 
     {{-- Acciones --}}
     <div class="card">
-
         <div class="card-body text-right">
 
             <a
@@ -646,14 +574,22 @@
             <button
                 type="button"
                 wire:click="save"
+                wire:loading.attr="disabled"
+                wire:target="save"
                 class="btn btn-success"
             >
-                <i class="fa fa-save"></i>
-                Crear Contrato
+                <span wire:loading.remove wire:target="save">
+                    <i class="fa fa-save"></i>
+                    Crear Contrato
+                </span>
+
+                <span wire:loading wire:target="save">
+                    <i class="fa fa-spinner fa-spin"></i>
+                    Guardando...
+                </span>
             </button>
 
         </div>
-
     </div>
 
 </div>

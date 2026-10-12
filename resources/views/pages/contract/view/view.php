@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\BuildIndustry;
 use App\Models\Assembly;
 use App\Models\AssemblyComponent;
+use App\Models\Industry;
 use Livewire\Component;
 
 new class extends Component
@@ -462,7 +463,9 @@ new class extends Component
                     : $this->contract->method_payment,
 
             'priority' =>
-                $this->contract->priority ?? 5,
+            $this->contract->priority ?? 5,
+            'external_id' => $this->contract->external_id,
+            'industry_id' => $this->contract->industry_id
         ];
 
 
@@ -1107,6 +1110,7 @@ new class extends Component
         return $this->view([
             'productResults' =>
                 $productResults,
+            'industries' => Industry::orderBy('name')->get(),
         ]);
     }
 };

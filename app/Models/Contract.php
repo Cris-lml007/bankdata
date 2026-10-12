@@ -15,6 +15,8 @@ class Contract extends Model
         'destination',
         'method_payment',
         'priority',
+        'external_id',
+        'industry_id'
     ];
 
     public function customer()
@@ -35,6 +37,10 @@ class Contract extends Model
     public function assemblies()
     {
         return $this->hasMany(Assembly::class);
+    }
+
+    public function industry(){
+        return $this->belongsTo(Industry::class,'industry_id','id');
     }
 
 

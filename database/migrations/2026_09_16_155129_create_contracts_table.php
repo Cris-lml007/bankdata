@@ -22,6 +22,9 @@ return new class extends Migration
             $table->enum('status', \App\Enums\Status::cases())->default(\App\Enums\Status::ACTIVE);
             $table->foreign('customer_id')->references('id')->on('customers')->onDelete('set null');
             $table->foreign('quotation_id')->references('id')->on('quotations')->onDelete('set null');
+
+            $table->string('external_id')->nullable();
+            $table->unsignedBigInteger('industry_id')->nullable();
             $table->timestamps();
         });
     }
