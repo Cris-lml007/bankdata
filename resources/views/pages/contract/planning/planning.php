@@ -103,6 +103,7 @@ new class extends Component
 
                             'industry_id' =>
                                 $assemblyComponent->industry_id,
+                        'type_factory_id' => $assemblyComponent->component->type_factory_id,
                         ];
                     }
 
@@ -137,7 +138,8 @@ new class extends Component
                                 $componentProduct->id,
 
                             'name' =>
-                                $componentProduct->name,
+                            $componentProduct->name,
+
 
                             /*
                              * 1 pieza por unidad del Assembly.
@@ -173,12 +175,13 @@ new class extends Component
                         $detail->product->name,
 
                     'required_quantity' =>
-                        $detail->quantity,
+                    $detail->quantity,
+
+                    'type_factory_id' => $detail->product->type_factory_id,
 
                     'assemblies' =>
                         $assemblyPlans,
                 ];
-
                 continue;
             }
 
@@ -207,6 +210,7 @@ new class extends Component
                     'quantity' => 0,
 
                     'industry_id' => '',
+                    'type_factory_id' => $componentProduct->type_factory_id,
                 ];
             }
 
@@ -218,7 +222,9 @@ new class extends Component
                     $detail->product->name,
 
                 'required_quantity' =>
-                    $detail->quantity,
+                $detail->quantity,
+
+            'type_factory_id' => $detail->product->type_factory_id,
 
                 'assemblies' => [
                     [
@@ -279,6 +285,7 @@ new class extends Component
                 'quantity' => 0,
 
                 'industry_id' => '',
+                'type_factory_id' => $componentProduct->type_factory_id,
             ];
         }
 
@@ -290,6 +297,7 @@ new class extends Component
             'quantity' => 0,
 
             'components' => $components,
+            'type_factory_id' => $product->type_factory_id,
         ];
     }
 

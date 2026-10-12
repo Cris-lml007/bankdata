@@ -18,10 +18,7 @@
 
         </div>
 
-        <a
-            href="{{ route('dashboard.contracts.view', $contract) }}"
-            class="btn btn-secondary"
-        >
+        <a href="{{ route('dashboard.contracts.view', $contract) }}" class="btn btn-secondary">
 
             <i class="fas fa-arrow-left"></i>
 
@@ -37,7 +34,6 @@
     {{-- ========================================================= --}}
 
     @if (session('success'))
-
         <div class="alert alert-success">
 
             <i class="fas fa-check-circle"></i>
@@ -45,7 +41,6 @@
             {{ session('success') }}
 
         </div>
-
     @endif
 
 
@@ -89,11 +84,8 @@
                 {{-- ================================================= --}}
 
                 @foreach ($planning as $productIndex => $product)
-
-                    <div
-                        class="card card-outline card-primary mb-4"
-                        wire:key="planning-product-{{ $product['product_id'] }}"
-                    >
+                    <div class="card card-outline card-primary mb-4"
+                        wire:key="planning-product-{{ $product['product_id'] }}">
 
                         {{-- PRODUCT HEADER --}}
 
@@ -130,15 +122,9 @@
                             {{-- ASSEMBLIES --}}
                             {{-- ================================================= --}}
 
-                            @foreach (
-                                $product['assemblies']
-                                as $assemblyIndex => $assembly
-                            )
-
-                                <div
-                                    class="card card-outline card-secondary mb-4"
-                                    wire:key="assembly-plan-{{ $productIndex }}-{{ $assemblyIndex }}"
-                                >
+                            @foreach ($product['assemblies'] as $assemblyIndex => $assembly)
+                                <div class="card card-outline card-secondary mb-4"
+                                    wire:key="assembly-plan-{{ $productIndex }}-{{ $assemblyIndex }}">
 
                                     {{-- ASSEMBLY HEADER --}}
 
@@ -156,22 +142,15 @@
                                             </strong>
 
 
-                                            @if (
-                                                count($product['assemblies']) > 1
-                                            )
-
-                                                <button
-                                                    type="button"
-                                                    class="btn btn-danger btn-sm"
-                                                    wire:click="removeAssembly({{ $productIndex }}, {{ $assemblyIndex }})"
-                                                >
+                                            @if (count($product['assemblies']) > 1)
+                                                <button type="button" class="btn btn-danger btn-sm"
+                                                    wire:click="removeAssembly({{ $productIndex }}, {{ $assemblyIndex }})">
 
                                                     <i class="fas fa-trash"></i>
 
                                                     Eliminar
 
                                                 </button>
-
                                             @endif
 
                                         </div>
@@ -194,36 +173,28 @@
                                                     Fábrica de ensamblaje
                                                 </label>
 
-                                                <select
-                                                    class="form-control"
-                                                    wire:model="planning.{{ $productIndex }}.assemblies.{{ $assemblyIndex }}.industry_id"
-                                                >
+                                                <select class="form-control"
+                                                    wire:model="planning.{{ $productIndex }}.assemblies.{{ $assemblyIndex }}.industry_id">
 
                                                     <option value="">
                                                         Seleccione una fábrica
                                                     </option>
 
                                                     @foreach ($industries as $industry)
-
-                                                        <option
-                                                            value="{{ $industry->id }}"
-                                                        >
-                                                            {{ $industry->name }}
-                                                        </option>
-
+                                                        @if ($industry->typeFactory->id == $product['type_factory_id'])
+                                                            <option value="{{ $industry->id }}">
+                                                                {{ $industry->name }}
+                                                            </option>
+                                                        @endif
                                                     @endforeach
 
                                                 </select>
 
 
-                                                @error(
-                                                    "planning.$productIndex.assemblies.$assemblyIndex.industry_id"
-                                                )
-
-                                                <small class="text-danger">
-                                                    {{ $message }}
-                                                </small>
-
+                                                @error("planning.$productIndex.assemblies.$assemblyIndex.industry_id")
+                                                    <small class="text-danger">
+                                                        {{ $message }}
+                                                    </small>
                                                 @enderror
 
                                             </div>
@@ -235,22 +206,14 @@
                                                     Cantidad a ensamblar
                                                 </label>
 
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    class="form-control"
-                                                    wire:model.live="planning.{{ $productIndex }}.assemblies.{{ $assemblyIndex }}.quantity"
-                                                >
+                                                <input type="number" min="0" class="form-control"
+                                                    wire:model.live="planning.{{ $productIndex }}.assemblies.{{ $assemblyIndex }}.quantity">
 
 
-                                                @error(
-                                                    "planning.$productIndex.assemblies.$assemblyIndex.quantity"
-                                                )
-
-                                                <small class="text-danger">
-                                                    {{ $message }}
-                                                </small>
-
+                                                @error("planning.$productIndex.assemblies.$assemblyIndex.quantity")
+                                                    <small class="text-danger">
+                                                        {{ $message }}
+                                                    </small>
                                                 @enderror
 
                                             </div>
@@ -274,55 +237,49 @@
 
 
                                         @if (count($assembly['components']))
-
                                             <div class="table-responsive">
 
                                                 <table class="table table-bordered table-sm">
 
                                                     <thead>
 
-                                                    <tr>
+                                                        <tr>
 
-                                                        <th>
-                                                            Componente
-                                                        </th>
+                                                            <th>
+                                                                Componente
+                                                            </th>
 
-                                                        <th width="180">
-                                                            Cantidad
-                                                        </th>
+                                                            <th width="180">
+                                                                Cantidad
+                                                            </th>
 
-                                                        <th>
-                                                            Fábrica de fabricación
-                                                        </th>
+                                                            <th>
+                                                                Fábrica de fabricación
+                                                            </th>
 
-                                                    </tr>
+                                                        </tr>
 
                                                     </thead>
 
 
                                                     <tbody>
 
-                                                    @foreach (
-                                                        $assembly['components']
-                                                        as $componentIndex => $component
-                                                    )
+                                                        @foreach ($assembly['components'] as $componentIndex => $component)
+                                                            <tr
+                                                                wire:key="assembly-component-plan-{{ $productIndex }}-{{ $assemblyIndex }}-{{ $componentIndex }}">
 
-                                                        <tr
-                                                            wire:key="assembly-component-plan-{{ $productIndex }}-{{ $assemblyIndex }}-{{ $componentIndex }}"
-                                                        >
+                                                                <td>
 
-                                                            <td>
+                                                                    <strong>
 
-                                                                <strong>
+                                                                        {{ $component['name'] }}
 
-                                                                    {{ $component['name'] }}
+                                                                    </strong>
 
-                                                                </strong>
-
-                                                            </td>
+                                                                </td>
 
 
-                                                            <td>
+                                                                <td>
 
                                                                     <span class="badge badge-primary">
 
@@ -330,67 +287,56 @@
 
                                                                     </span>
 
-                                                                <small class="text-muted">
+                                                                    <small class="text-muted">
 
-                                                                    piezas
+                                                                        piezas
 
-                                                                </small>
+                                                                    </small>
 
-                                                            </td>
+                                                                </td>
 
 
-                                                            <td>
+                                                                <td>
 
-                                                                <select
-                                                                    class="form-control"
-                                                                    wire:model="planning.{{ $productIndex }}.assemblies.{{ $assemblyIndex }}.components.{{ $componentIndex }}.industry_id"
-                                                                >
+                                                                    <select class="form-control"
+                                                                        wire:model="planning.{{ $productIndex }}.assemblies.{{ $assemblyIndex }}.components.{{ $componentIndex }}.industry_id">
 
-                                                                    <option value="">
-                                                                        Seleccione una fábrica
-                                                                    </option>
-
-                                                                    @foreach ($industries as $industry)
-
-                                                                        <option
-                                                                            value="{{ $industry->id }}"
-                                                                        >
-
-                                                                            {{ $industry->name }}
-
+                                                                        <option value="">
+                                                                            Seleccione una fábrica
                                                                         </option>
 
-                                                                    @endforeach
+                                                                        @foreach ($industries as $industry)
+                                                        @if ($industry->typeFactory->id == $component['type_factory_id'])
+                                                                            <option value="{{ $industry->id }}">
 
-                                                                </select>
+                                                                                {{ $industry->name }}
+
+                </option>
+                @endif
+                                                                        @endforeach
+
+                                                                    </select>
 
 
-                                                                @error(
-                                                                    "planning.$productIndex.assemblies.$assemblyIndex.components.$componentIndex.industry_id"
-                                                                )
+                                                                    @error("planning.$productIndex.assemblies.$assemblyIndex.components.$componentIndex.industry_id")
+                                                                        <small class="text-danger">
 
-                                                                <small class="text-danger">
+                                                                            {{ $message }}
 
-                                                                    {{ $message }}
+                                                                        </small>
+                                                                    @enderror
 
-                                                                </small>
+                                                                </td>
 
-                                                                @enderror
-
-                                                            </td>
-
-                                                        </tr>
-
-                                                    @endforeach
+                                                            </tr>
+                                                        @endforeach
 
                                                     </tbody>
 
                                                 </table>
 
                                             </div>
-
                                         @else
-
                                             <div class="alert alert-secondary">
 
                                                 <i class="fas fa-info-circle"></i>
@@ -399,7 +345,6 @@
                                                 componentes definidos.
 
                                             </div>
-
                                         @endif
 
 
@@ -420,11 +365,7 @@
                                                     <div>
 
                                                         @php
-                                                            $assemblyIndustry =
-                                                                $industries->firstWhere(
-                                                                    'id',
-                                                                    $assembly['industry_id']
-                                                                );
+                                                            $assemblyIndustry = $industries->firstWhere('id', $assembly['industry_id']);
                                                         @endphp
 
                                                         <strong>
@@ -482,7 +423,6 @@
                                     </div>
 
                                 </div>
-
                             @endforeach
 
 
@@ -490,11 +430,8 @@
                             {{-- AGREGAR ASSEMBLY --}}
                             {{-- ================================================= --}}
 
-                            <button
-                                type="button"
-                                class="btn btn-outline-primary"
-                                wire:click="addAssembly({{ $productIndex }})"
-                            >
+                            <button type="button" class="btn btn-outline-primary"
+                                wire:click="addAssembly({{ $productIndex }})">
 
                                 <i class="fas fa-plus"></i>
 
@@ -509,17 +446,11 @@
 
                             @php
 
-                                $distributed =
-                                    $this->distributedQuantity(
-                                        $product['assemblies']
-                                    );
+                                $distributed = $this->distributedQuantity($product['assemblies']);
 
-                                $required =
-                                    (int) $product['required_quantity'];
+                                $required = (int) $product['required_quantity'];
 
-                                $pending =
-                                    $required - $distributed;
-
+                                $pending = $required - $distributed;
                             @endphp
 
 
@@ -589,10 +520,7 @@
 
                                         <span
                                             class="info-box-icon
-                                            {{ $pending == 0
-                                                ? 'bg-success'
-                                                : 'bg-warning' }}"
-                                        >
+                                            {{ $pending == 0 ? 'bg-success' : 'bg-warning' }}">
 
                                             <i class="fas fa-clock"></i>
 
@@ -619,24 +547,19 @@
                             </div>
 
 
-                            @error(
-                                "planning.$productIndex.assemblies"
-                            )
+                            @error("planning.$productIndex.assemblies")
+                                <div class="alert alert-danger">
 
-                            <div class="alert alert-danger">
+                                    <i class="fas fa-exclamation-triangle"></i>
 
-                                <i class="fas fa-exclamation-triangle"></i>
+                                    {{ $message }}
 
-                                {{ $message }}
-
-                            </div>
-
+                                </div>
                             @enderror
 
                         </div>
 
                     </div>
-
                 @endforeach
 
 
@@ -646,11 +569,7 @@
 
                 <div class="d-flex justify-content-between">
 
-                    <button
-                        type="button"
-                        class="btn btn-secondary"
-                        wire:click="cancelPlanning"
-                    >
+                    <button type="button" class="btn btn-secondary" wire:click="cancelPlanning">
 
                         <i class="fas fa-times"></i>
 
@@ -659,11 +578,7 @@
                     </button>
 
 
-                    <button
-                        type="button"
-                        class="btn btn-warning"
-                        wire:click="savePlanning"
-                    >
+                    <button type="button" class="btn btn-warning" wire:click="savePlanning">
 
                         <i class="fas fa-save"></i>
 
@@ -676,11 +591,7 @@
             </div>
 
         </div>
-
-
     @else
-
-
         {{-- ========================================================= --}}
         {{-- TAREAS YA ASIGNADAS --}}
         {{-- ========================================================= --}}
@@ -700,17 +611,11 @@
 
                 <div class="card-tools">
 
-                    <button
-                        type="button"
-                        class="btn btn-warning btn-sm"
-                        wire:click="planContract"
-                    >
+                    <button type="button" class="btn btn-warning btn-sm" wire:click="planContract">
 
                         <i class="fas fa-edit"></i>
 
-                        {{ $contract->assemblies->count()
-                            ? 'Replanificar'
-                            : 'Asignar tareas' }}
+                        {{ $contract->assemblies->count() ? 'Replanificar' : 'Asignar tareas' }}
 
                     </button>
 
@@ -724,11 +629,7 @@
                 @if ($contract->assemblies->count())
 
                     @foreach ($contract->assemblies as $assembly)
-
-                        <div
-                            class="card card-outline card-primary mb-4"
-                            wire:key="assembly-{{ $assembly->id }}"
-                        >
+                        <div class="card card-outline card-primary mb-4" wire:key="assembly-{{ $assembly->id }}">
 
                             <div class="card-header">
 
@@ -781,7 +682,6 @@
                                 {{-- COMPONENTES --}}
 
                                 @if ($assembly->components->count())
-
                                     <h6>
 
                                         <i class="fas fa-puzzle-piece"></i>
@@ -797,57 +697,51 @@
 
                                             <thead>
 
-                                            <tr>
+                                                <tr>
 
-                                                <th>
-                                                    Componente
-                                                </th>
+                                                    <th>
+                                                        Componente
+                                                    </th>
 
-                                                <th width="180">
-                                                    Cantidad
-                                                </th>
+                                                    <th width="180">
+                                                        Cantidad
+                                                    </th>
 
-                                                <th>
-                                                    Fábrica
-                                                </th>
+                                                    <th>
+                                                        Fábrica
+                                                    </th>
 
-                                            </tr>
+                                                </tr>
 
                                             </thead>
 
 
                                             <tbody>
 
-                                            @foreach (
-                                                $assembly->components
-                                                as $component
-                                            )
+                                                @foreach ($assembly->components as $component)
+                                                    <tr wire:key="component-{{ $component->id }}">
 
-                                                <tr
-                                                    wire:key="component-{{ $component->id }}"
-                                                >
+                                                        <td>
 
-                                                    <td>
+                                                            {{ $component->component->name }}
 
-                                                        {{ $component->component->name }}
-
-                                                    </td>
+                                                        </td>
 
 
-                                                    <td>
+                                                        <td>
 
-                                                        <strong>
+                                                            <strong>
 
-                                                            {{ $component->quantity }}
+                                                                {{ $component->quantity }}
 
-                                                        </strong>
+                                                            </strong>
 
-                                                        piezas
+                                                            piezas
 
-                                                    </td>
+                                                        </td>
 
 
-                                                    <td>
+                                                        <td>
 
                                                             <span class="badge badge-info">
 
@@ -857,20 +751,17 @@
 
                                                             </span>
 
-                                                    </td>
+                                                        </td>
 
-                                                </tr>
-
-                                            @endforeach
+                                                    </tr>
+                                                @endforeach
 
                                             </tbody>
 
                                         </table>
 
                                     </div>
-
                                 @else
-
                                     <div class="alert alert-secondary mb-0">
 
                                         <i class="fas fa-info-circle"></i>
@@ -879,17 +770,13 @@
                                         componentes definidos.
 
                                     </div>
-
                                 @endif
 
                             </div>
 
                         </div>
-
                     @endforeach
-
                 @else
-
                     <div class="alert alert-warning">
 
                         <i class="fas fa-exclamation-triangle"></i>
