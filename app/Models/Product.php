@@ -39,7 +39,8 @@ class Product extends Model
 
     public function tagProducts()
     {
-        return $this->hasMany(TagProduct::class);
+        // return $this->hasMany(TagProduct::class);
+        return $this->morphMany(TagProduct::class,'itemable');
     }
 
     public function files()

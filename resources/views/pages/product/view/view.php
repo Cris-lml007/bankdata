@@ -33,7 +33,6 @@ new class extends Component
         'type_factory_id' => '',
     ];
 
-
     /*
     |--------------------------------------------------------------------------
     | Categorías
@@ -46,10 +45,9 @@ new class extends Component
         'name' => '',
     ];
 
-
     /*
     |--------------------------------------------------------------------------
-    | Componentes
+    | Componentes y procesos
     |--------------------------------------------------------------------------
     */
 
@@ -63,10 +61,41 @@ new class extends Component
 
     public $editingComponent = false;
 
+    /*
+    |--------------------------------------------------------------------------
+    | Edición de procesos directamente en su tarjeta
+    |--------------------------------------------------------------------------
+    */
+
+    public $editingInlineComponentId = null;
+
+    public $inlineComponentEdit = [
+        'name' => '',
+        'description' => '',
+        'quantity' => '',
+        'type_factory_id' => '',
+    ];
 
     /*
     |--------------------------------------------------------------------------
-    | Tags
+    | Etiquetas propias de cada proceso
+    |--------------------------------------------------------------------------
+    */
+
+    public array $componentTagInputs = [];
+
+    public $editingComponentTagId = null;
+
+    public $editingComponentTagComponentId = null;
+
+    public $componentTagEdit = [
+        'name' => '',
+        'value' => '',
+    ];
+
+    /*
+    |--------------------------------------------------------------------------
+    | Etiquetas del producto
     |--------------------------------------------------------------------------
     */
 
@@ -78,7 +107,6 @@ new class extends Component
 
     public $editingTag = false;
 
-
     /*
     |--------------------------------------------------------------------------
     | Archivos
@@ -89,6 +117,11 @@ new class extends Component
 
     public $fileName = '';
 
+    /*
+    |--------------------------------------------------------------------------
+    | Inicialización
+    |--------------------------------------------------------------------------
+    */
 
     public function mount(Product $product)
     {
@@ -100,7 +133,6 @@ new class extends Component
 
         $this->loadProductData();
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -151,7 +183,6 @@ new class extends Component
         $this->resetValidation();
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | Categorías
@@ -188,10 +219,9 @@ new class extends Component
         $this->resetValidation();
     }
 
-
     /*
     |--------------------------------------------------------------------------
-    | Componentes
+    | Crear componentes o procesos
     |--------------------------------------------------------------------------
     */
 
@@ -200,28 +230,36 @@ new class extends Component
         $this->validate([
             'component.name' => 'required|string|max:255',
             'component.description' => 'nullable|string',
-            'component.quantity' => 'numeric|min:0',
             'component.type_factory_id' => 'required|exists:type_factories,id',
         ]);
 
-        ComponentProduct::create([
+        $this->product->componentProducts()->create([
             'name' => $this->component['name'],
             'description' => $this->component['description'],
-            'quantity' => $this->component['quantity'],
             'type_factory_id' => $this->component['type_factory_id'],
-            'product_id' => $this->product->id,
         ]);
 
         $this->resetComponent();
 
-        $this->product->load('componentProducts.typeFactory');
+        $this->product->load([
+            'componentProducts.typeFactory',
+            'componentProducts.tags',
+        ]);
 
         $this->resetValidation();
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Edición tradicional de componentes
+    |--------------------------------------------------------------------------
+    | Se conserva para mantener la funcionalidad existente.
+    */
+
     public function editComponent($id)
     {
-        $component = $this->product->componentProducts()->findOrFail($id);
+        $component = $this->product->componentProducts()
+            ->findOrFail($id);
 
         $this->component = [
             'id' => $component->id,
@@ -239,7 +277,7 @@ new class extends Component
         $this->validate([
             'component.name' => 'required|string|max:255',
             'component.description' => 'nullable|string',
-            'component.quantity' => 'numeric|min:0',
+            'component.quantity' => 'required|numeric|min:0',
             'component.type_factory_id' => 'required|exists:type_factories,id',
         ]);
 
@@ -255,18 +293,12 @@ new class extends Component
 
         $this->resetComponent();
 
-        $this->product->load('componentProducts.typeFactory');
+        $this->product->load([
+            'componentProducts.typeFactory',
+            'componentProducts.tags',
+        ]);
 
         $this->resetValidation();
-    }
-
-    public function deleteComponent($id)
-    {
-        $this->product->componentProducts()
-            ->findOrFail($id)
-            ->delete();
-
-        $this->product->load('componentProducts.typeFactory');
     }
 
     public function resetComponent()
@@ -284,10 +316,214 @@ new class extends Component
         $this->resetValidation();
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Edición en línea de procesos
+    |--------------------------------------------------------------------------
+    */
+
+    public function startEditingComponent($id)
+    {
+        $component = $this->product->componentProducts()
+            ->findOrFail($id);
+
+        $this->editingInlineComponentId = $component->id;
+
+        $this->inlineComponentEdit = [
+            'name' => $component->name,
+            'description' => $component->description,
+            'quantity' => $component->quantity,
+            'type_factory_id' => $component->type_factory_id,
+        ];
+
+        $this->resetValidation();
+    }
+
+    public function saveInlineComponent($id)
+    {
+        if ((int) $this->editingInlineComponentId !== (int) $id) {
+            abort(403);
+        }
+
+        $this->validate([
+            'inlineComponentEdit.name' => 'required|string|max:255',
+            'inlineComponentEdit.description' => 'nullable|string',
+            'inlineComponentEdit.quantity' => 'required|numeric|min:0',
+            'inlineComponentEdit.type_factory_id' => 'required|exists:type_factories,id',
+        ]);
+
+        $component = $this->product->componentProducts()
+            ->findOrFail($id);
+
+        $component->update([
+            'name' => $this->inlineComponentEdit['name'],
+            'description' => $this->inlineComponentEdit['description'],
+            'quantity' => $this->inlineComponentEdit['quantity'],
+            'type_factory_id' => $this->inlineComponentEdit['type_factory_id'],
+        ]);
+
+        $this->cancelInlineComponentEdit();
+
+        $this->product->load([
+            'componentProducts.typeFactory',
+            'componentProducts.tags',
+        ]);
+
+        $this->resetValidation();
+    }
+
+    public function cancelInlineComponentEdit()
+    {
+        $this->editingInlineComponentId = null;
+
+        $this->inlineComponentEdit = [
+            'name' => '',
+            'description' => '',
+            'quantity' => '',
+            'type_factory_id' => '',
+        ];
+
+        $this->resetValidation();
+    }
+
+    public function deleteComponent($id)
+    {
+        $component = $this->product->componentProducts()
+            ->findOrFail($id);
+
+        $component->delete();
+
+        if ((int) $this->editingInlineComponentId === (int) $id) {
+            $this->cancelInlineComponentEdit();
+        }
+
+        if ((int) ($this->component['id'] ?? 0) === (int) $id) {
+            $this->resetComponent();
+        }
+
+        $this->product->load([
+            'componentProducts.typeFactory',
+            'componentProducts.tags',
+        ]);
+    }
 
     /*
     |--------------------------------------------------------------------------
-    | Tags
+    | Etiquetas de los procesos
+    |--------------------------------------------------------------------------
+    */
+
+    public function saveComponentTag($componentId)
+    {
+        $this->validate([
+            "componentTagInputs.{$componentId}.name" => 'required|string|max:255',
+            "componentTagInputs.{$componentId}.value" => 'required|string|max:255',
+        ]);
+
+        $component = $this->product->componentProducts()
+            ->findOrFail($componentId);
+
+        $component->tags()->create([
+            'name' => $this->componentTagInputs[$componentId]['name'],
+            'value' => $this->componentTagInputs[$componentId]['value'],
+        ]);
+
+        $this->componentTagInputs[$componentId] = [
+            'name' => '',
+            'value' => '',
+        ];
+
+        $this->product->load('componentProducts.tags');
+
+        $this->resetValidation();
+    }
+
+    public function editComponentTag($componentId, $tagId)
+    {
+        $component = $this->product->componentProducts()
+            ->findOrFail($componentId);
+
+        $tag = $component->tags()
+            ->findOrFail($tagId);
+
+        $this->editingComponentTagId = $tag->id;
+        $this->editingComponentTagComponentId = $component->id;
+
+        $this->componentTagEdit = [
+            'name' => $tag->name,
+            'value' => $tag->value,
+        ];
+
+        $this->resetValidation();
+    }
+
+    public function updateComponentTag()
+    {
+        if (
+            !$this->editingComponentTagId ||
+            !$this->editingComponentTagComponentId
+        ) {
+            return;
+        }
+
+        $this->validate([
+            'componentTagEdit.name' => 'required|string|max:255',
+            'componentTagEdit.value' => 'required|string|max:255',
+        ]);
+
+        $component = $this->product->componentProducts()
+            ->findOrFail($this->editingComponentTagComponentId);
+
+        $tag = $component->tags()
+            ->findOrFail($this->editingComponentTagId);
+
+        $tag->update([
+            'name' => $this->componentTagEdit['name'],
+            'value' => $this->componentTagEdit['value'],
+        ]);
+
+        $this->resetComponentTagEdit();
+
+        $this->product->load('componentProducts.tags');
+
+        $this->resetValidation();
+    }
+
+    public function deleteComponentTag($componentId, $tagId)
+    {
+        $component = $this->product->componentProducts()
+            ->findOrFail($componentId);
+
+        $component->tags()
+            ->findOrFail($tagId)
+            ->delete();
+
+        if (
+            (int) $this->editingComponentTagId === (int) $tagId &&
+            (int) $this->editingComponentTagComponentId === (int) $componentId
+        ) {
+            $this->resetComponentTagEdit();
+        }
+
+        $this->product->load('componentProducts.tags');
+    }
+
+    public function resetComponentTagEdit()
+    {
+        $this->editingComponentTagId = null;
+        $this->editingComponentTagComponentId = null;
+
+        $this->componentTagEdit = [
+            'name' => '',
+            'value' => '',
+        ];
+
+        $this->resetValidation();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Etiquetas generales del producto
     |--------------------------------------------------------------------------
     */
 
@@ -368,7 +604,6 @@ new class extends Component
         $this->resetValidation();
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | Archivos
@@ -414,7 +649,6 @@ new class extends Component
         $this->product->load('files');
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | Render
@@ -427,6 +661,7 @@ new class extends Component
             'typeFactory',
             'categories',
             'componentProducts.typeFactory',
+            'componentProducts.tags',
             'tagProducts',
             'files',
         ]);

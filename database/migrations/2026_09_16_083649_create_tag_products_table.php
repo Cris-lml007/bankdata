@@ -15,9 +15,10 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('value');
-            $table->unsignedBigInteger('product_id');
+            $table->morphs('itemable');
+            // $table->unsignedBigInteger('product_id');
 
-            $table->foreign('product_id')->references('id')->on('products');
+            // $table->foreign('product_id')->references('id')->on('products');
             $table->timestamps();
         });
     }
