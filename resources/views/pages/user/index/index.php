@@ -82,7 +82,7 @@ new class extends Component
 
     public function updatedFormRole($value)
     {
-        if ((int) $value !== Role::WORKER->value) {
+        if ((int) $value !== Role::WORKER->value || (int) $value !== Role::RECEPT->value) {
             $this->form['industry_id'] = '';
         }
 
@@ -139,7 +139,10 @@ new class extends Component
 
         if (
             (int) $this->form['role']
-            === Role::WORKER->value
+                === Role::WORKER->value
+                || (int) $this->form['role']
+                === Role::RECEPT->value
+
         ) {
 
             $rules['form.industry_id'] = [
@@ -161,7 +164,8 @@ new class extends Component
 
         $industryId =
             (int) $this->form['role']
-            === Role::WORKER->value
+            === Role::WORKER->value || (int) $this->form['role']
+            === Role::RECEPT->value
                 ? $this->form['industry_id']
                 : null;
 
@@ -229,12 +233,13 @@ new class extends Component
 
 
         $this->resetForm();
+        $this->redirect(route('dashboard.users'));
 
-        $this->js("$('#modal-user').modal('hide')");
-
-        $this->dispatch(
-            'close-user-modal'
-        );
+        // $this->js("$('#modal-user').modal('hide')");
+        //
+        // $this->dispatch(
+        //     'close-user-modal'
+        // );
     }
 
 

@@ -1,3 +1,4 @@
+
 <?php
 
 use App\Enums\Role;
@@ -5,422 +6,536 @@ use App\Enums\Status;
 use App\Models\Assembly;
 use App\Models\AssemblyComponent;
 use App\Models\BuildIndustry;
+use App\Models\Contract;
+use App\Models\Industry;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
 new class extends Component
 {
-    public $assemblies = [];
-    public $assemblyComponents = [];
-
+    public array $assemblies = [];
+    public array $assemblyComponents = [];
+    public array $assemblyGroups = [];
+    public array $receptionContracts = [];
     public array $progressInputs = [];
 
-    public function mount()
+    public string $search = '';
+
+    public function mount(): void
     {
         $this->loadTasks();
     }
 
-    public function loadTasks()
+    private function roleValue(): int
     {
-        $industryId = auth()->user()->industry_id;
+        $role = auth()->user()->role;
 
-        /*
-        |--------------------------------------------------------------------------
-        | ENSAMBLAJES
-        |--------------------------------------------------------------------------
-        */
-
-        $assemblies = Assembly::with([
-            'product.tagProducts',
-            'contract',
-        ])
-            ->where('industry_id', $industryId)
-            ->where('status', Status::ACTIVE)
-            ->get();
-
-        /*
-        |--------------------------------------------------------------------------
-        | COMPONENTES
-        |--------------------------------------------------------------------------
-        */
-
-        $assemblyComponents = AssemblyComponent::with([
-            'component.tagProducts',
-            'assembly.product',
-            'assembly.contract',
-        ])
-            ->where('industry_id', $industryId)
-            ->where('status', Status::ACTIVE)
-            ->get();
-
-        /*
-        |--------------------------------------------------------------------------
-        | IDs PARA OBTENER AVANCES
-        |--------------------------------------------------------------------------
-        */
-
-        $assemblyIds = $assemblies->pluck('id');
-        $componentIds = $assemblyComponents->pluck('id');
-
-        /*
-        |--------------------------------------------------------------------------
-        | AVANCE DE ENSAMBLAJES
-        |--------------------------------------------------------------------------
-        */
-
-        $assemblyProgress = BuildIndustry::query()
-            ->where('industry_id', $industryId)
-            ->where('buildeable_type', Assembly::class)
-            ->whereIn('buildeable_id', $assemblyIds)
-            ->selectRaw('buildeable_id, SUM(quantity) as total')
-            ->groupBy('buildeable_id')
-            ->pluck('total', 'buildeable_id');
-
-        /*
-        |--------------------------------------------------------------------------
-        | AVANCE DE COMPONENTES
-        |--------------------------------------------------------------------------
-        */
-
-        $componentProgress = BuildIndustry::query()
-            ->where('industry_id', $industryId)
-            ->where('buildeable_type', AssemblyComponent::class)
-            ->whereIn('buildeable_id', $componentIds)
-            ->selectRaw('buildeable_id, SUM(quantity) as total')
-            ->groupBy('buildeable_id')
-            ->pluck('total', 'buildeable_id');
-
-        /*
-        |--------------------------------------------------------------------------
-        | PREPARAR ENSAMBLAJES
-        |--------------------------------------------------------------------------
-        */
-
-        $this->assemblies = $assemblies
-            ->sortBy(function ($assembly) {
-                return [
-                    $assembly->contract?->priority ?? 5,
-                    $assembly->contract?->delivery_date ?? '9999-12-31',
-                    $assembly->contract_id,
-                    $assembly->id,
-                ];
-            })
-            ->map(function ($assembly) use ($assemblyProgress) {
-
-                $progress = (int) ($assemblyProgress[$assembly->id] ?? 0);
-
-                return [
-                    'id' => $assembly->id,
-
-                    'contract_id' => $assembly->contract_id,
-
-                    'delivery_date' => $assembly->contract?->delivery_date,
-
-                    'priority' => (int) (
-                        $assembly->contract?->priority ?? 5
-                    ),
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | PRODUCTO
-                    |--------------------------------------------------------------------------
-                    */
-
-                    'product_name' => $assembly->product?->name
-                        ?? 'Producto',
-
-                    'product_description' => $assembly->product?->description
-                        ?? '',
-
-                    'product_tags' => $assembly->product?->tagProducts
-                        ? $assembly->product->tagProducts
-                            ->map(fn ($tag) => [
-                                'name' => $tag->name,
-                                'value' => $tag->value,
-                            ])
-                            ->values()
-                            ->all()
-                        : [],
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | PROGRESO
-                    |--------------------------------------------------------------------------
-                    */
-
-                    'quantity' => (int) $assembly->quantity,
-
-                    'progress' => $progress,
-
-                    'pending' => max(
-                        0,
-                        (int) $assembly->quantity - $progress
-                    ),
-
-                    'percentage' => $assembly->quantity > 0
-                        ? min(
-                            100,
-                            round(
-                                ($progress / $assembly->quantity) * 100
-                            )
-                        )
-                        : 0,
-
-                    'status' => $assembly->status,
-
-                    'status_value' => $assembly->status?->value
-                        ?? $assembly->status,
-                ];
-            })
-            ->values()
-            ->all();
-
-        /*
-        |--------------------------------------------------------------------------
-        | PREPARAR COMPONENTES
-        |--------------------------------------------------------------------------
-        */
-
-        $this->assemblyComponents = $assemblyComponents
-            ->sortBy(function ($item) {
-                return [
-                    $item->assembly?->contract?->priority ?? 5,
-                    $item->assembly?->contract?->delivery_date
-                    ?? '9999-12-31',
-                    $item->assembly?->contract_id ?? 0,
-                    $item->id,
-                ];
-            })
-            ->map(function ($item) use ($componentProgress) {
-
-                $progress = (int) ($componentProgress[$item->id] ?? 0);
-
-                return [
-                    'id' => $item->id,
-
-                    'assembly_id' => $item->assembly_id,
-
-                    'contract_id' => $item->assembly?->contract_id,
-
-                    'delivery_date' => $item->assembly?->contract?->delivery_date,
-
-                    'priority' => (int) (
-                        $item->assembly?->contract?->priority ?? 5
-                    ),
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | PRODUCTO PADRE
-                    |--------------------------------------------------------------------------
-                    */
-
-                    'product_name' => $item->assembly?->product?->name
-                        ?? 'Producto',
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | PIEZA / COMPONENTE
-                    |--------------------------------------------------------------------------
-                    */
-
-                    'component_name' => $item->component?->name
-                        ?? 'Componente',
-
-                    'component_description' => $item->component?->description
-                        ?? '',
-
-                    'component_tags' => $item->component?->tagProducts
-                        ? $item->component->tagProducts
-                            ->map(fn ($tag) => [
-                                'name' => $tag->name,
-                                'value' => $tag->value,
-                            ])
-                            ->values()
-                            ->all()
-                        : [],
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | PROGRESO
-                    |--------------------------------------------------------------------------
-                    */
-
-                    'quantity' => (int) $item->quantity,
-
-                    'progress' => $progress,
-
-                    'pending' => max(
-                        0,
-                        (int) $item->quantity - $progress
-                    ),
-
-                    'percentage' => $item->quantity > 0
-                        ? min(
-                            100,
-                            round(
-                                ($progress / $item->quantity) * 100
-                            )
-                        )
-                        : 0,
-
-                    'status' => $item->status,
-
-                    'status_value' => $item->status?->value
-                        ?? $item->status,
-                ];
-            })
-            ->values()
-            ->all();
+        return (int) (
+            $role instanceof \BackedEnum
+                ? $role->value
+                : $role
+        );
     }
 
-    public function registerProgress(string $type, int $id)
+    private function isManagement(): bool
     {
-        abort_unless(
-            auth()->user()->role === Role::WORKER,
-            403
-        );
+        return in_array($this->roleValue(), [
+            Role::ADMIN->value,
+            Role::PRIVILEGED->value,
+            Role::SUPERVISOR->value,
+        ], true);
+    }
 
+    private function isWorker(): bool
+    {
+        return $this->roleValue() === Role::WORKER->value;
+    }
+
+    private function isReception(): bool
+    {
+        return $this->roleValue() === Role::RECEPT->value;
+    }
+
+    private function statusValue($status): ?int
+    {
+        if ($status instanceof \BackedEnum) {
+            return (int) $status->value;
+        }
+
+        return is_numeric($status) ? (int) $status : null;
+    }
+
+    private function isFinished($status): bool
+    {
+        return $this->statusValue($status) === Status::FINISH->value;
+    }
+
+    private function tagsToArray($tags): array
+    {
+        return $tags
+            ? $tags->map(fn ($tag) => [
+                'name' => $tag->name,
+                'value' => $tag->value,
+            ])->values()->all()
+            : [];
+    }
+
+    private function progressFor(
+        string $model,
+        int $id,
+        int $industryId
+    ): int {
+        return (int) BuildIndustry::query()
+            ->where('buildeable_type', $model)
+            ->where('buildeable_id', $id)
+            ->where('industry_id', $industryId)
+            ->sum('quantity');
+    }
+
+    public function updatedSearch(): void
+    {
+        if ($this->isManagement()) {
+            $this->buildAssemblyGroups();
+        }
+    }
+
+    public function loadTasks(): void
+    {
         $industryId = auth()->user()->industry_id;
 
-        $key = "{$type}-{$id}";
+        $this->assemblies = [];
+        $this->assemblyComponents = [];
+        $this->assemblyGroups = [];
+        $this->receptionContracts = [];
 
-        $quantity = (int) (
-            $this->progressInputs[$key] ?? 0
-        );
-
-        if ($quantity <= 0) {
-            $this->addError(
-                "progressInputs.{$key}",
-                'Ingresa una cantidad válida.'
-            );
-
+        if ($this->isReception()) {
+            $this->loadReceptionContracts();
             return;
         }
 
-        DB::transaction(function () use (
-            $type,
-            $id,
-            $quantity,
-            $industryId,
-            $key
+        abort_unless(
+            $this->isManagement() || $this->isWorker(),
+            403
+        );
+
+        /*
+         * Gestión y trabajadores solo ven ensamblajes activos.
+         * Los procesos también deben estar activos y pertenecer
+         * a un ensamblaje activo.
+         */
+        $assemblyQuery = Assembly::query()
+            ->where('status', Status::ACTIVE)
+            ->with([
+                'product.tagProducts',
+                'contract',
+            ]);
+
+        $componentQuery = AssemblyComponent::query()
+            ->where('status', Status::ACTIVE)
+            ->whereHas('assembly', function ($query) {
+                $query->where('status', Status::ACTIVE);
+            })
+            ->with([
+                'component.tags',
+                'assembly.product.tagProducts',
+                'assembly.contract',
+            ]);
+
+        if ($this->isWorker()) {
+            $assemblyQuery->where('industry_id', $industryId);
+            $componentQuery->where('industry_id', $industryId);
+        }
+
+        $assemblyModels = $assemblyQuery->get();
+        $componentModels = $componentQuery->get();
+
+        $industryIds = $assemblyModels->pluck('industry_id')
+            ->merge($componentModels->pluck('industry_id'))
+            ->filter()
+            ->unique();
+
+        $industries = Industry::query()
+            ->whereIn('id', $industryIds)
+            ->get()
+            ->keyBy('id');
+
+        $assemblyProgress = [];
+        foreach ($assemblyModels as $assembly) {
+            $assemblyProgress[$assembly->id] = $this->progressFor(
+                Assembly::class,
+                (int) $assembly->id,
+                (int) $assembly->industry_id
+            );
+        }
+
+        $componentProgress = [];
+        foreach ($componentModels as $component) {
+            $componentProgress[$component->id] = $this->progressFor(
+                AssemblyComponent::class,
+                (int) $component->id,
+                (int) $component->industry_id
+            );
+        }
+
+        $this->assemblies = $assemblyModels
+            ->sortBy(fn ($item) => [
+                $item->contract?->priority ?? 5,
+                $item->contract?->delivery_date ?? '9999-12-31',
+                $item->contract_id ?? 0,
+                $item->id,
+            ])
+            ->map(function ($item) use ($assemblyProgress, $industries) {
+                $progress = (int) ($assemblyProgress[$item->id] ?? 0);
+                $quantity = (int) $item->quantity;
+
+                return [
+                    'id' => (int) $item->id,
+                    'industry_id' => (int) $item->industry_id,
+                    'industry_name' => $industries[$item->industry_id]?->name
+                        ?? 'Área',
+
+                    'contract_id' => $item->contract_id,
+                    'external_id' => $item->contract?->external_id,
+                    'delivery_date' => $item->contract?->delivery_date,
+                    'priority' => (int) ($item->contract?->priority ?? 5),
+
+                    'product_name' => $item->product?->name ?? 'Producto',
+                    'product_description' => $item->product?->description ?? '',
+                    'product_tags' => $this->tagsToArray(
+                        $item->product?->tagProducts
+                    ),
+
+                    'quantity' => $quantity,
+                    'progress' => $progress,
+                    'pending' => max(0, $quantity - $progress),
+                    'percentage' => $quantity > 0
+                        ? min(100, (int) round($progress / $quantity * 100))
+                        : 0,
+
+                    'finished' => $this->isFinished($item->status),
+                ];
+            })
+            ->values()
+            ->all();
+
+        $this->assemblyComponents = $componentModels
+            ->sortBy(fn ($item) => [
+                $item->assembly?->contract?->priority ?? 5,
+                $item->assembly?->contract?->delivery_date ?? '9999-12-31',
+                $item->assembly_id ?? 0,
+                $item->id,
+            ])
+            ->map(function ($item) use ($componentProgress, $industries) {
+                $industry = $industries[$item->industry_id] ?? null;
+                $component = $item->component;
+                $product = $item->assembly?->product;
+
+                $progress = (int) ($componentProgress[$item->id] ?? 0);
+                $quantity = (int) $item->quantity;
+
+                $showProcessTags = $industry
+                    && $component
+                    && $component->type_factory_id !== null
+                    && (int) $component->type_factory_id
+                        === (int) $industry->type_factory_id;
+
+                return [
+                    'id' => (int) $item->id,
+                    'assembly_id' => (int) $item->assembly_id,
+                    'industry_id' => (int) $item->industry_id,
+                    'industry_name' => $industry?->name ?? 'Área',
+
+                    'contract_id' => $item->assembly?->contract_id,
+                    'external_id' => $item->assembly?->contract?->external_id,
+                    'delivery_date' => $item->assembly?->contract?->delivery_date,
+                    'priority' => (int) ($item->assembly?->contract?->priority ?? 5),
+
+                    'product_name' => $product?->name ?? 'Producto',
+                    'product_tags' => $this->tagsToArray(
+                        $product?->tagProducts
+                    ),
+
+                    'component_name' => $component?->name ?? 'Componente',
+                    'component_description' => $component?->description ?? '',
+                    'component_tags' => $this->tagsToArray(
+                        $component?->tagProducts
+                    ),
+
+                    'process_tags' => $showProcessTags
+                        ? $this->tagsToArray($component->tags)
+                        : [],
+
+                    'quantity' => $quantity,
+                    'progress' => $progress,
+                    'pending' => max(0, $quantity - $progress),
+                    'percentage' => $quantity > 0
+                        ? min(100, (int) round($progress / $quantity * 100))
+                        : 0,
+
+                    'finished' => $this->isFinished($item->status),
+                ];
+            })
+            ->values()
+            ->all();
+
+        if ($this->isManagement()) {
+            $this->buildAssemblyGroups();
+        }
+    }
+
+    private function buildAssemblyGroups(): void
+    {
+        $componentsByAssembly = collect($this->assemblyComponents)
+            ->groupBy('assembly_id');
+
+        $search = mb_strtolower(trim($this->search));
+
+        $groups = collect($this->assemblies)->map(function ($assembly) use (
+            $componentsByAssembly
         ) {
+            $processes = $componentsByAssembly->get(
+                $assembly['id'],
+                collect()
+            )->values();
 
+            return [
+                ...$assembly,
+                'processes' => $processes->all(),
+                'process_count' => $processes->count(),
+            ];
+        });
+
+        if ($search !== '') {
+            $groups = $groups->filter(function ($assembly) use ($search) {
+                foreach ([
+                    $assembly['id'],
+                    $assembly['contract_id'] ?? '',
+                    $assembly['external_id'] ?? '',
+                    $assembly['product_name'],
+                    $assembly['product_description'],
+                    $assembly['industry_name'],
+                ] as $field) {
+                    if (str_contains(
+                        mb_strtolower((string) $field),
+                        $search
+                    )) {
+                        return true;
+                    }
+                }
+
+                foreach ($assembly['processes'] as $process) {
+                    foreach ([
+                        $process['component_name'],
+                        $process['component_description'],
+                        $process['industry_name'],
+                    ] as $field) {
+                        if (str_contains(
+                            mb_strtolower((string) $field),
+                            $search
+                        )) {
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            });
+        }
+
+        $this->assemblyGroups = $groups->values()->all();
+    }
+
+    private function loadReceptionContracts(): void
+    {
+        $industryId = auth()->user()->industry_id;
+
+        if (!$industryId) {
+            return;
+        }
+
+        $contracts = Contract::query()
+            ->where('industry_id', $industryId)
+            ->where(function ($query) {
+                $query->whereNull('status')
+                    ->orWhere('status', '!=', Status::DELIVERED->value);
+            })
+            ->with('industry')
+            ->orderByRaw('priority IS NULL')
+            ->orderBy('priority')
+            ->orderByRaw('delivery_date IS NULL')
+            ->orderBy('delivery_date')
+            ->get();
+
+        $assemblies = Assembly::query()
+            ->whereIn('contract_id', $contracts->pluck('id'))
+            ->with('product')
+            ->get();
+
+        $progress = [];
+        foreach ($assemblies as $assembly) {
+            $progress[$assembly->id] = $this->progressFor(
+                Assembly::class,
+                (int) $assembly->id,
+                (int) $assembly->industry_id
+            );
+        }
+
+        $assembliesByContract = $assemblies->groupBy('contract_id');
+
+        $this->receptionContracts = $contracts->where('status','!=',Status::DELIVERED)->map(
+            function ($contract) use ($assembliesByContract, $progress) {
+                $items = $assembliesByContract->get(
+                    $contract->id,
+                    collect()
+                );
+
+                $required = (int) $items->sum('quantity');
+
+                $completed = (int) $items->sum(
+                    fn ($item) => min(
+                        (int) $item->quantity,
+                        (int) ($progress[$item->id] ?? 0)
+                    )
+                );
+
+                return [
+                    'id' => $contract->id,
+                    'external_id' => $contract->external_id,
+                    'industry_name' => $contract->industry?->name ?? 'Área',
+                    'delivery_date' => $contract->delivery_date,
+                    'priority' => (int) ($contract->priority ?? 5),
+                    'quantity' => $required,
+                    'progress' => $completed,
+                    'pending' => max(0, $required - $completed),
+                    'percentage' => $required > 0
+                        ? min(100, (int) round($completed / $required * 100))
+                        : 0,
+
+                    'products' => $items->map(function ($item) use ($progress) {
+                        $quantity = (int) $item->quantity;
+                        $done = (int) ($progress[$item->id] ?? 0);
+
+                        return [
+                            'name' => $item->product?->name ?? 'Producto',
+                            'quantity' => $quantity,
+                            'progress' => $done,
+                            'pending' => max(0, $quantity - $done),
+                            'percentage' => $quantity > 0
+                                ? min(100, (int) round($done / $quantity * 100))
+                                : 0,
+                        ];
+                    })->values()->all(),
+                ];
+            }
+        )->values()->all();
+    }
+
+    public function registerProgress(string $type, int $id): void
+    {
+        abort_unless($this->isManagement(), 403);
+
+        $key = "{$type}-{$id}";
+
+        $validated = $this->validate([
+            "progressInputs.{$key}" => ['required', 'integer', 'min:1'],
+        ], [
+            "progressInputs.{$key}.required" => 'Ingresa una cantidad.',
+            "progressInputs.{$key}.integer" => 'La cantidad debe ser un entero.',
+            "progressInputs.{$key}.min" => 'La cantidad debe ser mayor que cero.',
+        ]);
+
+        $quantity = (int) $validated['progressInputs'][$key];
+
+        DB::transaction(function () use ($type, $id, $quantity, $key) {
             if ($type === 'assembly') {
-
-                $task = Assembly::where('id', $id)
-                    ->where('industry_id', $industryId)
-                    ->firstOrFail();
+                $task = Assembly::query()
+                    ->where('status', Status::ACTIVE)
+                    ->lockForUpdate()
+                    ->findOrFail($id);
 
                 $model = Assembly::class;
-
             } elseif ($type === 'component') {
-
-                $task = AssemblyComponent::where('id', $id)
-                    ->where('industry_id', $industryId)
-                    ->firstOrFail();
+                $task = AssemblyComponent::query()
+                    ->where('status', Status::ACTIVE)
+                    ->whereHas('assembly', function ($query) {
+                        $query->where('status', Status::ACTIVE);
+                    })
+                    ->lockForUpdate()
+                    ->findOrFail($id);
 
                 $model = AssemblyComponent::class;
-
             } else {
                 abort(404);
             }
 
-            if ($task->status === Status::FINISH) {
-
-                $this->addError(
-                    "progressInputs.{$key}",
-                    'Esta tarea ya está finalizada.'
-                );
-
-                return;
-            }
-
-            $currentProgress = BuildIndustry::query()
-                ->where('industry_id', $industryId)
-                ->where('buildeable_type', $model)
-                ->where('buildeable_id', $task->id)
-                ->sum('quantity');
-
-            $remaining = max(
-                0,
-                $task->quantity - $currentProgress
+            $current = $this->progressFor(
+                $model,
+                (int) $task->id,
+                (int) $task->industry_id
             );
 
-            if ($quantity > $remaining) {
+            $remaining = max(0, (int) $task->quantity - $current);
 
+            if ($quantity > $remaining) {
                 $this->addError(
                     "progressInputs.{$key}",
                     "Solo quedan {$remaining} unidades pendientes."
                 );
-
                 return;
             }
 
             BuildIndustry::create([
-                'industry_id' => $industryId,
+                'industry_id' => $task->industry_id,
                 'quantity' => $quantity,
                 'buildeable_type' => $model,
                 'buildeable_id' => $task->id,
             ]);
-
-            $this->progressInputs[$key] = '';
         });
 
+        unset($this->progressInputs[$key]);
+
+        // Volver a consultar para mostrar el avance actualizado.
         $this->loadTasks();
     }
 
-    public function finishTask(string $type, int $id)
+    public function finishTask(string $type, int $id): void
     {
-        abort_unless(
-            auth()->user()->role === Role::WORKER,
-            403
-        );
+        abort_unless($this->isManagement(), 403);
 
-        $industryId = auth()->user()->industry_id;
-
-        DB::transaction(function () use (
-            $type,
-            $id,
-            $industryId
-        ) {
-
+        DB::transaction(function () use ($type, $id) {
             if ($type === 'assembly') {
-
-                $task = Assembly::where('id', $id)
-                    ->where('industry_id', $industryId)
-                    ->firstOrFail();
+                $task = Assembly::query()
+                    ->where('status', Status::ACTIVE)
+                    ->lockForUpdate()
+                    ->findOrFail($id);
 
                 $model = Assembly::class;
-
             } elseif ($type === 'component') {
-
-                $task = AssemblyComponent::where('id', $id)
-                    ->where('industry_id', $industryId)
-                    ->firstOrFail();
+                $task = AssemblyComponent::query()
+                    ->where('status', Status::ACTIVE)
+                    ->whereHas('assembly', function ($query) {
+                        $query->where('status', Status::ACTIVE);
+                    })
+                    ->lockForUpdate()
+                    ->findOrFail($id);
 
                 $model = AssemblyComponent::class;
-
             } else {
                 abort(404);
             }
 
-            if ($task->status === Status::FINISH) {
-                return;
-            }
+            $progress = $this->progressFor(
+                $model,
+                (int) $task->id,
+                (int) $task->industry_id
+            );
 
-            $progress = BuildIndustry::query()
-                ->where('industry_id', $industryId)
-                ->where('buildeable_type', $model)
-                ->where('buildeable_id', $task->id)
-                ->sum('quantity');
-
-            if ($progress < $task->quantity) {
-
+            if ($progress < (int) $task->quantity) {
                 $this->addError(
                     'finish',
                     'La tarea todavía no está completada.'
                 );
-
                 return;
             }
 
@@ -428,6 +543,7 @@ new class extends Component
             $task->save();
         });
 
+        // La consulta posterior excluye la tarea finalizada.
         $this->loadTasks();
     }
 

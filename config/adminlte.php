@@ -312,6 +312,12 @@ return [
             'route' => 'dashboard',
             'icon' => 'fas fa-tachometer-alt',
         ],
+        // Panel de trabajo
+        [
+            'text' => 'Panel de trabajo',
+            'route' => 'dashboard.worker',
+            'icon' => 'fas fa-fw fa-hard-hat',
+        ],
         [
             'header' => 'Catalogo',
         ],
@@ -344,12 +350,6 @@ return [
             'icon' => 'fas fa-fw fa-users',
         ],
 
-        // Panel de trabajo
-        [
-            'text' => 'Panel de trabajo',
-            'route' => 'dashboard.worker',
-            'icon' => 'fas fa-fw fa-hard-hat',
-        ],
 
         /*
         |--------------------------------------------------------------------------
@@ -361,16 +361,21 @@ return [
             'header' => 'Gestión comercial',
         ],
 
-        [
-            'text' => 'Cotizaciones',
-            'route' => 'dashboard.quotations',
-            'icon' => 'fas fa-fw fa-file-invoice',
-        ],
+        // [
+        //     'text' => 'Cotizaciones',
+        //     'route' => 'dashboard.quotations',
+        //     'icon' => 'fas fa-fw fa-file-invoice',
+        // ],
 
         [
-            'text' => 'Contratos',
+            'text' => 'Ordenes',
             'route' => 'dashboard.contracts',
             'icon' => 'fas fa-fw fa-file-signature',
+        ],
+        [
+            'text' => 'Reportes',
+            'route' => 'dashboard.reports.view',
+            'icon' => 'fas fa-fw fa-list',
         ],
 
     ],
