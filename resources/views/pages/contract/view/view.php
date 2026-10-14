@@ -758,6 +758,14 @@ new class extends Component
                 $this->contractData[
                 'priority'
                 ],
+            'external_id' =>
+                $this->contractData[
+                'external_id'
+                ],
+            'industry_id' =>
+                $this->contractData[
+                'industry_id'
+                ],
         ]);
 
 
