@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\Role;
 use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
@@ -56,6 +57,10 @@ class LoginController extends Controller
 
         if (!$user) {
             return false;
+        }
+
+        if($user->role == Role::RECEPT || $user->role == Role::WORKER){
+            $this->redirectTo = '/dashboard/worker';
         }
 
         return $this->guard()->attempt(

@@ -13,4 +13,9 @@ class Customer extends Model
         'ci_nit',
         'organization'
     ];
+
+    public function contracts()
+    {
+        return $this->hasMany(Contract::class);
+    }
 }

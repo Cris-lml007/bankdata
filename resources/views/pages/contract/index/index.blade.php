@@ -1,24 +1,18 @@
 <x-slot name="header">
     <h1>Contratos</h1>
-
-    <a
-        href="{{ route('dashboard.contracts.register') }}"
-        class="btn btn-primary"
-    >
-        <i class="fa fa-plus"></i>
-        Nuevo Contrato
-    </a>
+    @can('manage-users')
+        <a href="{{ route('dashboard.contracts.register') }}" class="btn btn-primary">
+            <i class="fa fa-plus"></i>
+            Nuevo Contrato
+        </a>
+    @endcan
 </x-slot>
 
 <div>
-    <livewire:table-card
-        :heads="$heads"
-        wire:model.live="list"
-        title="<i class='fa fa-file-signature'></i> Mis Contratos"
-    >
+    <livewire:table-card :heads="$heads" wire:model.live="list"
+        title="<i class='fa fa-file-signature'></i> Mis Contratos">
 
         @foreach ($this->contracts as $contract)
-
             <tr>
 
                 <td>
@@ -39,21 +33,17 @@
 
                 <td>
                     <span class="badge {{ $contract->status->badgeClass() }}">
-                    {{ $contract->status->label() }}
+                        {{ $contract->status->label() }}
                     </span>
                 </td>
 
                 <td>
-                    <a
-                        href="{{ route('dashboard.contracts.view', $contract) }}"
-                        class="btn btn-primary btn-sm"
-                    >
+                    <a href="{{ route('dashboard.contracts.view', $contract) }}" class="btn btn-primary btn-sm">
                         <i class="fa fa-eye"></i>
                     </a>
                 </td>
 
             </tr>
-
         @endforeach
 
     </livewire:table-card>

@@ -257,12 +257,12 @@ return [
     */
 
     'use_route_url' => false,
-    'dashboard_url' => 'dashboard',
+    'dashboard_url' => '#',
     'logout_url' => 'logout',
     'login_url' => 'login',
-    'register_url' => 'register',
-    'password_reset_url' => 'password/reset',
-    'password_email_url' => 'password/email',
+    'register_url' => null,
+    'password_reset_url' => null,
+    'password_email_url' => null,
     'profile_url' => false,
     'disable_darkmode_routes' => false,
 
@@ -300,85 +300,95 @@ return [
 
 
     // Sidebar items:
-    'menu' => [
+'menu' => [
 
-        /*
-        |--------------------------------------------------------------------------
-        | Catálogo
-        |--------------------------------------------------------------------------
-        */
-        [
-            'text' => 'Dashboard',
-            'route' => 'dashboard',
-            'icon' => 'fas fa-tachometer-alt',
-        ],
-        // Panel de trabajo
-        [
-            'text' => 'Panel de trabajo',
-            'route' => 'dashboard.worker',
-            'icon' => 'fas fa-fw fa-hard-hat',
-        ],
-        [
-            'header' => 'Catalogo',
-        ],
-
-        [
-            'text' => 'Productos',
-            'route' => 'dashboard.products',
-            'icon' => 'fas fa-fw fa-box',
-        ],
-
-        [
-            'text' => 'Categorías',
-            'route' => 'dashboard.categories',
-            'icon' => 'fas fa-fw fa-tags',
-        ],
-
-        [
-            'text' => 'Tipos de Areas',
-            'route' => 'dashboard.type-factories',
-            'icon' => 'fas fa-fw fa-industry',
-        ],
-        [
-            'text' => 'Areas',
-            'route' => 'dashboard.industries',
-            'icon' => 'fas fa-fw fa-building',
-        ],
-        [
-            'text' => 'Usuarios',
-            'route' => 'dashboard.users',
-            'icon' => 'fas fa-fw fa-users',
-        ],
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Gestión comercial
-        |--------------------------------------------------------------------------
-        */
-
-        [
-            'header' => 'Gestión comercial',
-        ],
-
-        // [
-        //     'text' => 'Cotizaciones',
-        //     'route' => 'dashboard.quotations',
-        //     'icon' => 'fas fa-fw fa-file-invoice',
-        // ],
-
-        [
-            'text' => 'Ordenes',
-            'route' => 'dashboard.contracts',
-            'icon' => 'fas fa-fw fa-file-signature',
-        ],
-        [
-            'text' => 'Reportes',
-            'route' => 'dashboard.reports.view',
-            'icon' => 'fas fa-fw fa-list',
-        ],
-
+    [
+        'text' => 'Dashboard',
+        'route' => 'dashboard',
+        'icon' => 'fas fa-tachometer-alt',
+        'can' => 'view-work-panel',
     ],
+
+    [
+        'text' => 'Panel de trabajo',
+        'route' => 'dashboard.worker',
+        'icon' => 'fas fa-fw fa-hard-hat',
+    ],
+
+    [
+        'header' => 'Catálogo',
+        'can' => 'view-products',
+    ],
+
+    [
+        'text' => 'Productos',
+        'route' => 'dashboard.products',
+        'icon' => 'fas fa-fw fa-box',
+        'can' => 'view-products',
+    ],
+
+    [
+        'text' => 'Categorías',
+        'route' => 'dashboard.categories',
+        'icon' => 'fas fa-fw fa-tags',
+        'can' => 'view-categories',
+    ],
+
+    [
+        'text' => 'Clientes',
+        'route' => 'dashboard.customers',
+        'icon' => 'fas fa-fw fa-address-book',
+        'can' => 'view-customers',
+    ],
+
+    [
+        'text' => 'Tipos de Áreas',
+        'route' => 'dashboard.type-factories',
+        'icon' => 'fas fa-fw fa-industry',
+        'can' => 'manage-production',
+    ],
+
+    [
+        'text' => 'Áreas',
+        'route' => 'dashboard.industries',
+        'icon' => 'fas fa-fw fa-building',
+        'can' => 'manage-production',
+    ],
+
+    [
+        'text' => 'Usuarios',
+        'route' => 'dashboard.users',
+        'icon' => 'fas fa-fw fa-users',
+        'can' => 'manage-users',
+    ],
+
+    [
+        'header' => 'Gestión comercial',
+        'can' => 'view-orders',
+    ],
+
+    // [
+    //     'text' => 'Cotizaciones',
+    //     'route' => 'dashboard.quotations',
+    //     'icon' => 'fas fa-fw fa-file-invoice',
+    //     'can' => 'manage-quotations',
+    // ],
+
+    [
+        'text' => 'Órdenes',
+        'route' => 'dashboard.contracts',
+        'icon' => 'fas fa-fw fa-file-signature',
+        'can' => 'view-orders',
+    ],
+
+    [
+        'text' => 'Reportes',
+        'route' => 'dashboard.reports.view',
+        'icon' => 'fas fa-fw fa-list',
+        'can' => 'view-reports',
+    ],
+
+],
     /*
     |--------------------------------------------------------------------------
     | Menu Filters
