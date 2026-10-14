@@ -30,6 +30,8 @@ Route::prefix('/dashboard')->group(function(){
 
     Route::livewire('/worker','pages::work.index')->name('dashboard.worker');
 
+    Route::livewire('/reports','pages::reports.view')->name('dashboard.reports.view');
+
 
 
     Route::get('/products/files/{file}', function (\App\Models\File $file) {
