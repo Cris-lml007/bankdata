@@ -110,6 +110,10 @@ Route::prefix('/dashboard')
             ->middleware('can:manage-users')
             ->name('dashboard.users');
 
+        Route::livewire('/tasks', 'pages::tasks.index')
+            ->middleware('can:manage-production')
+            ->name('dashboard.tasks');
+
 
         Route::get('/products/files/{file}', function (\App\Models\File $file) {
             abort_unless(

@@ -1,4 +1,3 @@
-
 <?php
 
 use App\Enums\Role;
@@ -8,6 +7,7 @@ use App\Models\AssemblyComponent;
 use App\Models\BuildIndustry;
 use App\Models\Contract;
 use App\Models\Industry;
+use App\Models\Task;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
@@ -19,6 +19,7 @@ new class extends Component
     public array $assemblyGroups = [];
     public array $receptionContracts = [];
     public array $progressInputs = [];
+    public array $specificTasks = [];
 
     public string $search = '';
 
@@ -108,6 +109,7 @@ new class extends Component
         $this->assemblyComponents = [];
         $this->assemblyGroups = [];
         $this->receptionContracts = [];
+        $this->specificTasks = [];
 
         if ($this->isReception()) {
             $this->loadReceptionContracts();
@@ -120,9 +122,33 @@ new class extends Component
         );
 
         /*
-         * Gestión y trabajadores solo ven ensamblajes activos.
-         * Los procesos también deben estar activos y pertenecer
-         * a un ensamblaje activo.
+         * NUEVO: tareas asignadas al área del trabajador.
+         * Las tareas con fecha límite se muestran hasta ese día.
+         * Las tareas sin fecha límite siguen mostrándose.
+         */
+        if ($this->isWorker() && $industryId) {
+            $this->specificTasks = Task::query()
+                ->where('industry_id', $industryId)
+                ->where(function ($query) {
+                    $query->whereNull('to')
+                        ->orWhereDate('to', '>=', today()->toDateString());
+                })
+                ->orderByRaw('`to` IS NULL')
+                ->orderBy('to')
+                ->orderBy('id')
+                ->get()
+                ->map(fn ($task) => [
+                    'id' => (int) $task->id,
+                    'name' => $task->name,
+                    'description' => $task->description,
+                    'to' => $task->to,
+                ])
+                ->values()
+                ->all();
+        }
+
+        /*
+         * Lógica original de ensamblajes y procesos.
          */
         $assemblyQuery = Assembly::query()
             ->where('status', Status::ACTIVE)
@@ -161,6 +187,7 @@ new class extends Component
             ->keyBy('id');
 
         $assemblyProgress = [];
+
         foreach ($assemblyModels as $assembly) {
             $assemblyProgress[$assembly->id] = $this->progressFor(
                 Assembly::class,
@@ -170,6 +197,7 @@ new class extends Component
         }
 
         $componentProgress = [];
+
         foreach ($componentModels as $component) {
             $componentProgress[$component->id] = $this->progressFor(
                 AssemblyComponent::class,
@@ -373,6 +401,7 @@ new class extends Component
             ->get();
 
         $progress = [];
+
         foreach ($assemblies as $assembly) {
             $progress[$assembly->id] = $this->progressFor(
                 Assembly::class,
@@ -383,8 +412,9 @@ new class extends Component
 
         $assembliesByContract = $assemblies->groupBy('contract_id');
 
-        $this->receptionContracts = $contracts->where('status','!=',Status::DELIVERED)->map(
-            function ($contract) use ($assembliesByContract, $progress) {
+        $this->receptionContracts = $contracts
+            ->where('status', '!=', Status::DELIVERED)
+            ->map(function ($contract) use ($assembliesByContract, $progress) {
                 $items = $assembliesByContract->get(
                     $contract->id,
                     collect()
@@ -427,8 +457,9 @@ new class extends Component
                         ];
                     })->values()->all(),
                 ];
-            }
-        )->values()->all();
+            })
+            ->values()
+            ->all();
     }
 
     public function registerProgress(string $type, int $id): void
@@ -495,7 +526,6 @@ new class extends Component
 
         unset($this->progressInputs[$key]);
 
-        // Volver a consultar para mostrar el avance actualizado.
         $this->loadTasks();
     }
 
@@ -543,7 +573,6 @@ new class extends Component
             $task->save();
         });
 
-        // La consulta posterior excluye la tarea finalizada.
         $this->loadTasks();
     }
 

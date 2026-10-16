@@ -1,4 +1,3 @@
-
 @php
     $role = auth()->user()->role;
 
@@ -12,20 +11,68 @@
     $isReception = $role === \App\Enums\Role::RECEPT;
 @endphp
 
-<div class="container-fluid">
+<div class="container-fluid" wire:poll.60s="loadTasks">
 
     {{-- ENCABEZADO --}}
     <div class="row mb-3">
-        <div class="col-12">
-            <h4 class="mb-1">Panel de trabajo</h4>
+        <div class="col-md-8 col-12">
+            <h1 class="mb-1">Panel de trabajo</h1>
             <small class="text-muted">
                 {{ auth()->user()->industry?->name }}
             </small>
         </div>
+
+        @if(auth()->user()->role == \App\Enums\Role::WORKER)
+        {{-- RELOJ --}}
+        <div class="col-md-4 col-12 text-md-right mt-2 mt-md-0">
+            <div class="card card-outline card-info mb-0">
+                <div class="card-body py-2">
+                    <div class="text-muted small">
+                        <i class="far fa-calendar-alt mr-1"></i>
+                        Fecha y hora actual
+                    </div>
+
+                    <div
+                        x-data="{
+                            now: new Date(),
+                            init() {
+                                setInterval(() => {
+                                    this.now = new Date();
+                                }, 1000);
+                            },
+                            get dateText() {
+                                return this.now.toLocaleDateString('es-BO', {
+                                    weekday: 'long',
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
+                                });
+                            },
+                            get timeText() {
+                                return this.now.toLocaleTimeString('es-BO', {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    second: '2-digit',
+                                    hour12: false
+                                });
+                            }
+                        }"
+                    >
+                        <div class="font-weight-bold text-capitalize"
+                             x-text="dateText"></div>
+                        <h4 class="mb-0 text-info">
+                            <i class="far fa-clock mr-1"></i>
+                            <span x-text="timeText"></span>
+                        </h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
     </div>
 
     {{-- ====================================================== --}}
-    {{-- RECEPCIÓN                                              --}}
+    {{-- RECEPCIÓN --}}
     {{-- ====================================================== --}}
     @if ($isReception)
 
@@ -92,7 +139,6 @@
                                     <th class="text-center">Avance</th>
                                 </tr>
                             </thead>
-
                             <tbody>
                                 @forelse ($contract['products'] as $product)
                                     <tr>
@@ -121,7 +167,7 @@
         @endforelse
 
     {{-- ====================================================== --}}
-    {{-- GESTIÓN: ENSAMBLAJES Y PROCESOS                        --}}
+    {{-- GESTIÓN: ENSAMBLAJES Y PROCESOS --}}
     {{-- ====================================================== --}}
     @elseif ($isManagement)
 
@@ -199,8 +245,6 @@
                 </div>
 
                 <div class="card-body">
-
-                    {{-- INFORMACIÓN DEL ENSAMBLAJE --}}
                     <div class="mb-2">
                         <small class="text-muted">
                             Área: {{ $assembly['industry_name'] }}
@@ -220,7 +264,6 @@
                         @endif
                     </div>
 
-                    {{-- ETIQUETAS GLOBALES --}}
                     @if (!empty($assembly['product_tags']))
                         <div class="mb-3">
                             <small class="font-weight-bold">
@@ -239,12 +282,10 @@
                         </div>
                     @endif
 
-                    {{-- AVANCE DEL ENSAMBLAJE --}}
                     <div class="progress mb-3" style="height: 10px;">
-                        <div
-                            class="progress-bar bg-primary"
-                            style="width: {{ $assembly['percentage'] }}%"
-                        ></div>
+                        <div class="progress-bar bg-primary"
+                             style="width: {{ $assembly['percentage'] }}%">
+                        </div>
                     </div>
 
                     <div class="row text-center mb-3">
@@ -350,7 +391,6 @@
                                     </span>
                                 </div>
 
-                                {{-- ETIQUETAS GLOBALES DEL COMPONENTE --}}
                                 @if (!empty($process['component_tags']))
                                     <div class="mt-2">
                                         <small class="font-weight-bold">
@@ -369,7 +409,6 @@
                                     </div>
                                 @endif
 
-                                {{-- ETIQUETAS DEL PROCESO --}}
                                 @if (!empty($process['process_tags']))
                                     <div class="mt-2">
                                         <small class="font-weight-bold">
@@ -388,12 +427,10 @@
                                     </div>
                                 @endif
 
-                                {{-- AVANCE DEL PROCESO --}}
                                 <div class="progress my-3" style="height: 8px;">
-                                    <div
-                                        class="progress-bar bg-info"
-                                        style="width: {{ $process['percentage'] }}%"
-                                    ></div>
+                                    <div class="progress-bar bg-info"
+                                         style="width: {{ $process['percentage'] }}%">
+                                    </div>
                                 </div>
 
                                 <div class="row text-center mb-3">
@@ -469,8 +506,7 @@
         @empty
             <div class="alert alert-info">
                 @if ($search !== '')
-                    No se encontraron ensamblajes ni procesos para
-                    "{{ $search }}".
+                    No se encontraron ensamblajes ni procesos para "{{ $search }}".
                 @else
                     No hay ensamblajes ni procesos pendientes de registro.
                 @endif
@@ -478,10 +514,62 @@
         @endforelse
 
     {{-- ====================================================== --}}
-    {{-- TRABAJADORES                                           --}}
+    {{-- TRABAJADORES --}}
     {{-- ====================================================== --}}
     @elseif ($isWorker)
 
+        {{-- TAREAS ASIGNADAS AL ÁREA --}}
+        <div class="card card-outline card-warning">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-clipboard-list mr-1"></i>
+                    Mis tareas
+                </h3>
+                <div class="card-tools">
+                    <span class="badge badge-warning">
+                        {{ count($specificTasks) }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="card-body">
+                @forelse ($specificTasks as $task)
+                    <div class="border rounded p-3 mb-3"
+                         wire:key="worker-specific-task-{{ $task['id'] }}">
+                        <div class="d-flex justify-content-between flex-wrap">
+                            <h5 class="mb-1">
+                                <i class="fas fa-tasks text-warning mr-1"></i>
+                                {{ $task['name'] }}
+                            </h5>
+
+                            @if ($task['to'])
+                                <span class="badge badge-secondary align-self-start">
+                                    <i class="far fa-calendar-alt mr-1"></i>
+                                    Límite:
+                                    {{ \Illuminate\Support\Carbon::parse($task['to'])->format('d/m/Y') }}
+                                </span>
+                            @else
+                                <span class="badge badge-info align-self-start">
+                                    Sin fecha límite
+                                </span>
+                            @endif
+                        </div>
+
+                        @if ($task['description'])
+                            <p class="text-muted mb-0 mt-2">
+                                    {!! nl2br(e($task['description'])) !!}
+                            </p>
+                        @endif
+                    </div>
+                @empty
+                    <div class="text-muted">
+                        No tienes tareas pendientes asignadas a tu área.
+                    </div>
+                @endforelse
+            </div>
+        </div>
+
+        {{-- ENSAMBLAJES DEL TRABAJADOR --}}
         <h5 class="mb-3">
             <i class="fas fa-cubes mr-1"></i>
             Ensamblajes de mi área
@@ -525,10 +613,9 @@
                     @endif
 
                     <div class="progress my-3" style="height: 8px;">
-                        <div
-                            class="progress-bar bg-success"
-                            style="width: {{ $assembly['percentage'] }}%"
-                        ></div>
+                        <div class="progress-bar bg-success"
+                             style="width: {{ $assembly['percentage'] }}%">
+                        </div>
                     </div>
 
                     <div class="row text-center">
@@ -553,6 +640,7 @@
             </div>
         @endforelse
 
+        {{-- PROCESOS DEL TRABAJADOR --}}
         <h5 class="mb-3 mt-4">
             <i class="fas fa-tools mr-1"></i>
             Procesos de mi área
@@ -637,10 +725,9 @@
                     @endif
 
                     <div class="progress my-3" style="height: 8px;">
-                        <div
-                            class="progress-bar bg-success"
-                            style="width: {{ $process['percentage'] }}%"
-                        ></div>
+                        <div class="progress-bar bg-success"
+                             style="width: {{ $process['percentage'] }}%">
+                        </div>
                     </div>
 
                     <div class="row text-center">
