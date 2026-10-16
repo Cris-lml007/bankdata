@@ -1,5 +1,5 @@
 <x-slot name="header">
-    <h1>Contrato #{{ $contract->id }}</h1>
+    <h1>Orden #{{ $contract->id }}</h1>
 </x-slot>
 
 <div>
@@ -252,7 +252,7 @@
 
                         <i class="fa fa-user-slash"></i>
 
-                        Este contrato corresponde a un
+                        Esta Orden corresponde a un
                         <strong>cliente anónimo</strong>.
 
                     </div>
@@ -272,7 +272,7 @@
 
             <h3 class="card-title">
                 <i class="fa fa-file-signature"></i>
-                Información del Contrato
+                Información de Orden
             </h3>
 
         </div>
@@ -358,7 +358,7 @@
 
                                 @foreach (\App\Enums\TypePayment::cases() as $method)
                                     <option value="{{ $method->value }}">
-                                        {{ $method->name }}
+                                        {{ $method->label() }}
                                     </option>
                                 @endforeach
 
@@ -373,7 +373,7 @@
                             <div class="text-muted">
 
                                 @if ($contract->method_payment instanceof \App\Enums\TypePayment)
-                                    {{ $contract->method_payment->name }}
+                                    {{ $contract->method_payment->label() }}
                                 @else
                                     {{ $contract->method_payment }}
                                 @endif
@@ -565,7 +565,7 @@
                             </div>
                         @else
                             <div class="text-muted">
-                                Contrato directo
+                                Orden directo
                             </div>
                         @endif
 
@@ -919,7 +919,7 @@
                     <i class="fas fa-info-circle"></i>
 
                     No hay información de fabricación
-                    para este contrato.
+                    para esta orden.
 
                 </div>
 
@@ -1037,7 +1037,7 @@
                             <tr>
 
                                 <td colspan="{{ $editingContract ? 6 : 5 }}" class="text-center text-muted py-4">
-                                    No hay productos en este contrato.
+                                    No hay productos en esta orden.
                                 </td>
 
                             </tr>

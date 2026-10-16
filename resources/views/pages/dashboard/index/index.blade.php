@@ -9,7 +9,7 @@
         <div class="col-md-7">
 
             <h4 class="mb-1">
-                Dashboard de contratos
+                Dashboard de Ordenes
             </h4>
 
             <small class="text-muted">
@@ -47,7 +47,7 @@
                 <div class="col-md-8">
 
                     <label>
-                        Buscar contrato
+                        Buscar Orden
                     </label>
 
                     <div class="input-group">
@@ -148,7 +148,7 @@
                         <div class="col-md-4">
 
                             <h5 class="mb-1">
-                                Contrato #{{ $contract['id'] }}
+                                Orden #{{ $contract['id'] }}
                             </h5>
 
                             <div class="text-muted">
@@ -494,7 +494,7 @@
 
                     <i class="fas fa-external-link-alt mr-1"></i>
 
-                    Ver contrato #{{ $contract['id'] }}
+                    Ver Orden #{{ $contract['id'] }}
 
                 </div>
 
@@ -513,22 +513,22 @@
                 @if ($search !== '')
 
                     <h5>
-                        No se encontraron contratos
+                        No se encontraron ordenes
                     </h5>
 
                     <p class="text-muted mb-0">
-                        No hay contratos que coincidan con
+                        No hay ordenes que coincidan con
                         "{{ $search }}".
                     </p>
 
                 @else
 
                     <h5>
-                        No hay contratos
+                        No hay ordenes
                     </h5>
 
                     <p class="text-muted mb-0">
-                        No existen contratos con el estado seleccionado.
+                        No existen ordenes con el estado seleccionado.
                     </p>
 
                 @endif

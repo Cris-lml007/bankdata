@@ -1,9 +1,9 @@
 <x-slot name="header">
-    <h1>Contratos</h1>
+    <h1>Ordenes</h1>
     @can('manage-users')
         <a href="{{ route('dashboard.contracts.register') }}" class="btn btn-primary">
             <i class="fa fa-plus"></i>
-            Nuevo Contrato
+            Nueva Orden
         </a>
     @endcan
 </x-slot>

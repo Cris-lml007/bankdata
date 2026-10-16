@@ -1,5 +1,5 @@
 <x-slot name="header">
-    <h1>Nuevo Contrato</h1>
+    <h1>Nueva Orden</h1>
 </x-slot>
 
 <div>
@@ -162,7 +162,7 @@
         <div class="card-header">
             <h3 class="card-title">
                 <i class="fa fa-file-signature"></i>
-                Información del Contrato
+                Información de la Orden
             </h3>
         </div>
 
@@ -580,7 +580,7 @@
             >
                 <span wire:loading.remove wire:target="save">
                     <i class="fa fa-save"></i>
-                    Crear Contrato
+                    Crear Orden
                 </span>
 
                 <span wire:loading wire:target="save">

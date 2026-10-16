@@ -8,6 +8,7 @@ enum TypePayment: int
     CASE CASH = 2;
     CASE MIXED = 3;
     CASE NONE = 4;
+    CASE TRANSFER = 5;
 
     public function label(): string
     {
@@ -16,6 +17,7 @@ enum TypePayment: int
             self::CASH => 'EFECTIVO',
             self::MIXED => 'MIXTO',
             self::NONE => 'NINGUNO',
+            self::TRANSFER => 'TRANSFERENCIA'
         };
     }
 
