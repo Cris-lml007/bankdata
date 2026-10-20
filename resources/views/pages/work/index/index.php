@@ -1,11 +1,14 @@
+
 <?php
 
+use App\Enums\Priority;
 use App\Enums\Role;
 use App\Enums\Status;
 use App\Models\Assembly;
 use App\Models\AssemblyComponent;
 use App\Models\BuildIndustry;
 use App\Models\Contract;
+use App\Models\DetailContract;
 use App\Models\Industry;
 use App\Models\Task;
 use Illuminate\Support\Collection;
@@ -72,14 +75,70 @@ new class extends Component
         return $this->statusValue($status) === Status::FINISH->value;
     }
 
+    private function priorityData($priority): array
+    {
+        $value = $priority instanceof \BackedEnum
+            ? (int) $priority->value
+            : (int) ($priority ?? Priority::NORMAL->value);
+
+        $enum = Priority::tryFrom($value)
+            ?? Priority::NORMAL;
+
+        $class = match ($enum) {
+            Priority::URGENT => 'danger',
+            Priority::HIGH => 'warning',
+            Priority::MEDIUM => 'info',
+            Priority::LOW => 'secondary',
+            Priority::NORMAL => 'light',
+        };
+
+        return [
+            'priority' => $value,
+            'priority_label' => $enum->label(),
+            'priority_badge' => $class,
+        ];
+    }
+
     private function tagsToArray($tags): array
     {
-        return $tags
-            ? $tags->map(fn ($tag) => [
-                'name' => $tag->name,
-                'value' => $tag->value,
-            ])->values()->all()
-            : [];
+        if (!$tags) {
+            return [];
+        }
+
+        return $tags->map(fn ($tag) => [
+            'name' => (string) $tag->name,
+            'value' => (string) $tag->value,
+        ])->values()->all();
+    }
+
+    /**
+     * Etiquetas del detalle del contrato correspondiente
+     * al producto solicitado en el contrato.
+     */
+    private function detailContractTags(
+        ?int $contractId,
+        ?int $productId
+    ): array {
+        if (!$contractId || !$productId) {
+            return [];
+        }
+
+        return DetailContract::query()
+            ->where('contract_id', $contractId)
+            ->where('product_id', $productId)
+            ->with('tags')
+            ->get()
+            ->flatMap(fn ($detail) => $detail->tags)
+            ->unique(fn ($tag) => implode('|', [
+                $tag->name,
+                $tag->value,
+            ]))
+            ->map(fn ($tag) => [
+                'name' => (string) $tag->name,
+                'value' => (string) $tag->value,
+            ])
+            ->values()
+            ->all();
     }
 
     private function progressFor(
@@ -103,7 +162,8 @@ new class extends Component
 
     public function loadTasks(): void
     {
-        $industryId = auth()->user()->industry_id;
+        $user = auth()->user();
+        $industryId = $user->industry_id;
 
         $this->assemblies = [];
         $this->assemblyComponents = [];
@@ -121,17 +181,12 @@ new class extends Component
             403
         );
 
-        /*
-         * NUEVO: tareas asignadas al área del trabajador.
-         * Las tareas con fecha límite se muestran hasta ese día.
-         * Las tareas sin fecha límite siguen mostrándose.
-         */
         if ($this->isWorker() && $industryId) {
             $this->specificTasks = Task::query()
                 ->where('industry_id', $industryId)
                 ->where(function ($query) {
                     $query->whereNull('to')
-                        ->orWhereDate('to', '>=', today()->toDateString());
+                        ->orWhereDate('to', '>=', today());
                 })
                 ->orderByRaw('`to` IS NULL')
                 ->orderBy('to')
@@ -147,9 +202,6 @@ new class extends Component
                 ->all();
         }
 
-        /*
-         * Lógica original de ensamblajes y procesos.
-         */
         $assemblyQuery = Assembly::query()
             ->where('status', Status::ACTIVE)
             ->with([
@@ -159,9 +211,9 @@ new class extends Component
 
         $componentQuery = AssemblyComponent::query()
             ->where('status', Status::ACTIVE)
-            ->whereHas('assembly', function ($query) {
-                $query->where('status', Status::ACTIVE);
-            })
+            ->whereHas('assembly', fn ($query) =>
+                $query->where('status', Status::ACTIVE)
+            )
             ->with([
                 'component.tags',
                 'assembly.product.tagProducts',
@@ -206,9 +258,12 @@ new class extends Component
             );
         }
 
+        /*
+         * ENSAMBLAJES
+         */
         $this->assemblies = $assemblyModels
             ->sortBy(fn ($item) => [
-                $item->contract?->priority ?? 5,
+                $item->contract?->priority ?? Priority::NORMAL->value,
                 $item->contract?->delivery_date ?? '9999-12-31',
                 $item->contract_id ?? 0,
                 $item->id,
@@ -216,6 +271,8 @@ new class extends Component
             ->map(function ($item) use ($assemblyProgress, $industries) {
                 $progress = (int) ($assemblyProgress[$item->id] ?? 0);
                 $quantity = (int) $item->quantity;
+                $product = $item->product;
+                $contract = $item->contract;
 
                 return [
                     'id' => (int) $item->id,
@@ -224,14 +281,25 @@ new class extends Component
                         ?? 'Área',
 
                     'contract_id' => $item->contract_id,
-                    'external_id' => $item->contract?->external_id,
-                    'delivery_date' => $item->contract?->delivery_date,
-                    'priority' => (int) ($item->contract?->priority ?? 5),
+                    'external_id' => $contract?->external_id,
+                    'delivery_date' => $contract?->delivery_date,
 
-                    'product_name' => $item->product?->name ?? 'Producto',
-                    'product_description' => $item->product?->description ?? '',
+                    ...$this->priorityData($contract?->priority),
+
+                    'product_name' => $product?->name ?? 'Producto',
+                    'product_description' => $product?->description ?? '',
+
                     'product_tags' => $this->tagsToArray(
-                        $item->product?->tagProducts
+                        $product?->tagProducts
+                    ),
+
+                    'detail_contract_tags' => $this->detailContractTags(
+                        $item->contract_id
+                            ? (int) $item->contract_id
+                            : null,
+                        $item->product_id
+                            ? (int) $item->product_id
+                            : null
                     ),
 
                     'quantity' => $quantity,
@@ -247,9 +315,13 @@ new class extends Component
             ->values()
             ->all();
 
+        /*
+         * PROCESOS / COMPONENTES
+         */
         $this->assemblyComponents = $componentModels
             ->sortBy(fn ($item) => [
-                $item->assembly?->contract?->priority ?? 5,
+                $item->assembly?->contract?->priority
+                    ?? Priority::NORMAL->value,
                 $item->assembly?->contract?->delivery_date ?? '9999-12-31',
                 $item->assembly_id ?? 0,
                 $item->id,
@@ -257,7 +329,9 @@ new class extends Component
             ->map(function ($item) use ($componentProgress, $industries) {
                 $industry = $industries[$item->industry_id] ?? null;
                 $component = $item->component;
-                $product = $item->assembly?->product;
+                $assembly = $item->assembly;
+                $product = $assembly?->product;
+                $contract = $assembly?->contract;
 
                 $progress = (int) ($componentProgress[$item->id] ?? 0);
                 $quantity = (int) $item->quantity;
@@ -274,20 +348,31 @@ new class extends Component
                     'industry_id' => (int) $item->industry_id,
                     'industry_name' => $industry?->name ?? 'Área',
 
-                    'contract_id' => $item->assembly?->contract_id,
-                    'external_id' => $item->assembly?->contract?->external_id,
-                    'delivery_date' => $item->assembly?->contract?->delivery_date,
-                    'priority' => (int) ($item->assembly?->contract?->priority ?? 5),
+                    'contract_id' => $assembly?->contract_id,
+                    'external_id' => $contract?->external_id,
+                    'delivery_date' => $contract?->delivery_date,
+
+                    ...$this->priorityData($contract?->priority),
 
                     'product_name' => $product?->name ?? 'Producto',
                     'product_tags' => $this->tagsToArray(
                         $product?->tagProducts
                     ),
 
+                    'detail_contract_tags' => $this->detailContractTags(
+                        $assembly?->contract_id
+                            ? (int) $assembly->contract_id
+                            : null,
+                        $assembly?->product_id
+                            ? (int) $assembly->product_id
+                            : null
+                    ),
+
                     'component_name' => $component?->name ?? 'Componente',
                     'component_description' => $component?->description ?? '',
+
                     'component_tags' => $this->tagsToArray(
-                        $component?->tagProducts
+                        $component?->tags
                     ),
 
                     'process_tags' => $showProcessTags
@@ -312,20 +397,62 @@ new class extends Component
         }
     }
 
+    /**
+     * Devuelve un texto normalizado con los datos de búsqueda.
+     * Cada término se comprobará por separado, de modo que
+     * "cuello alto" coincida aunque sean campos diferentes.
+     */
+    private function searchableText(array $item): string
+    {
+        $values = [];
+
+        foreach ($item as $key => $value) {
+            if (in_array($key, [
+                'product_tags',
+                'detail_contract_tags',
+                'component_tags',
+                'process_tags',
+            ], true)) {
+                foreach ($value ?? [] as $tag) {
+                    $values[] = $tag['name'] ?? '';
+                    $values[] = $tag['value'] ?? '';
+                }
+
+                continue;
+            }
+
+            if (is_scalar($value) || $value === null) {
+                $values[] = (string) ($value ?? '');
+            }
+        }
+
+        return mb_strtolower(implode(' ', $values));
+    }
+
+    private function matchesSearch(array $item, array $terms): bool
+    {
+        $text = $this->searchableText($item);
+
+        foreach ($terms as $term) {
+            if (!str_contains($text, $term)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     private function buildAssemblyGroups(): void
     {
         $componentsByAssembly = collect($this->assemblyComponents)
             ->groupBy('assembly_id');
 
-        $search = mb_strtolower(trim($this->search));
-
         $groups = collect($this->assemblies)->map(function ($assembly) use (
             $componentsByAssembly
         ) {
-            $processes = $componentsByAssembly->get(
-                $assembly['id'],
-                collect()
-            )->values();
+            $processes = $componentsByAssembly
+                ->get($assembly['id'], collect())
+                ->values();
 
             return [
                 ...$assembly,
@@ -334,36 +461,22 @@ new class extends Component
             ];
         });
 
-        if ($search !== '') {
-            $groups = $groups->filter(function ($assembly) use ($search) {
-                foreach ([
-                    $assembly['id'],
-                    $assembly['contract_id'] ?? '',
-                    $assembly['external_id'] ?? '',
-                    $assembly['product_name'],
-                    $assembly['product_description'],
-                    $assembly['industry_name'],
-                ] as $field) {
-                    if (str_contains(
-                        mb_strtolower((string) $field),
-                        $search
-                    )) {
-                        return true;
-                    }
+        $terms = preg_split(
+            '/\s+/u',
+            mb_strtolower(trim($this->search)),
+            -1,
+            PREG_SPLIT_NO_EMPTY
+        ) ?: [];
+
+        if ($terms !== []) {
+            $groups = $groups->filter(function ($assembly) use ($terms) {
+                if ($this->matchesSearch($assembly, $terms)) {
+                    return true;
                 }
 
                 foreach ($assembly['processes'] as $process) {
-                    foreach ([
-                        $process['component_name'],
-                        $process['component_description'],
-                        $process['industry_name'],
-                    ] as $field) {
-                        if (str_contains(
-                            mb_strtolower((string) $field),
-                            $search
-                        )) {
-                            return true;
-                        }
+                    if ($this->matchesSearch($process, $terms)) {
+                        return true;
                     }
                 }
 
@@ -397,7 +510,7 @@ new class extends Component
 
         $assemblies = Assembly::query()
             ->whereIn('contract_id', $contracts->pluck('id'))
-            ->with('product')
+            ->with(['product.tagProducts'])
             ->get();
 
         $progress = [];
@@ -413,7 +526,10 @@ new class extends Component
         $assembliesByContract = $assemblies->groupBy('contract_id');
 
         $this->receptionContracts = $contracts
-            ->where('status', '!=', Status::DELIVERED)
+            ->filter(fn ($contract) =>
+                $this->statusValue($contract->status)
+                    !== Status::DELIVERED->value
+            )
             ->map(function ($contract) use ($assembliesByContract, $progress) {
                 $items = $assembliesByContract->get(
                     $contract->id,
@@ -430,11 +546,13 @@ new class extends Component
                 );
 
                 return [
-                    'id' => $contract->id,
+                    'id' => (int) $contract->id,
                     'external_id' => $contract->external_id,
                     'industry_name' => $contract->industry?->name ?? 'Área',
                     'delivery_date' => $contract->delivery_date,
-                    'priority' => (int) ($contract->priority ?? 5),
+
+                    ...$this->priorityData($contract->priority),
+
                     'quantity' => $required,
                     'progress' => $completed,
                     'pending' => max(0, $required - $completed),
@@ -466,10 +584,19 @@ new class extends Component
     {
         abort_unless($this->isManagement(), 403);
 
+        abort_unless(
+            in_array($type, ['assembly', 'component'], true),
+            404
+        );
+
         $key = "{$type}-{$id}";
 
         $validated = $this->validate([
-            "progressInputs.{$key}" => ['required', 'integer', 'min:1'],
+            "progressInputs.{$key}" => [
+                'required',
+                'integer',
+                'min:1',
+            ],
         ], [
             "progressInputs.{$key}.required" => 'Ingresa una cantidad.',
             "progressInputs.{$key}.integer" => 'La cantidad debe ser un entero.',
@@ -486,18 +613,16 @@ new class extends Component
                     ->findOrFail($id);
 
                 $model = Assembly::class;
-            } elseif ($type === 'component') {
+            } else {
                 $task = AssemblyComponent::query()
                     ->where('status', Status::ACTIVE)
-                    ->whereHas('assembly', function ($query) {
-                        $query->where('status', Status::ACTIVE);
-                    })
+                    ->whereHas('assembly', fn ($query) =>
+                        $query->where('status', Status::ACTIVE)
+                    )
                     ->lockForUpdate()
                     ->findOrFail($id);
 
                 $model = AssemblyComponent::class;
-            } else {
-                abort(404);
             }
 
             $current = $this->progressFor(
@@ -513,6 +638,7 @@ new class extends Component
                     "progressInputs.{$key}",
                     "Solo quedan {$remaining} unidades pendientes."
                 );
+
                 return;
             }
 
@@ -533,6 +659,11 @@ new class extends Component
     {
         abort_unless($this->isManagement(), 403);
 
+        abort_unless(
+            in_array($type, ['assembly', 'component'], true),
+            404
+        );
+
         DB::transaction(function () use ($type, $id) {
             if ($type === 'assembly') {
                 $task = Assembly::query()
@@ -541,18 +672,16 @@ new class extends Component
                     ->findOrFail($id);
 
                 $model = Assembly::class;
-            } elseif ($type === 'component') {
+            } else {
                 $task = AssemblyComponent::query()
                     ->where('status', Status::ACTIVE)
-                    ->whereHas('assembly', function ($query) {
-                        $query->where('status', Status::ACTIVE);
-                    })
+                    ->whereHas('assembly', fn ($query) =>
+                        $query->where('status', Status::ACTIVE)
+                    )
                     ->lockForUpdate()
                     ->findOrFail($id);
 
                 $model = AssemblyComponent::class;
-            } else {
-                abort(404);
             }
 
             $progress = $this->progressFor(
@@ -566,6 +695,7 @@ new class extends Component
                     'finish',
                     'La tarea todavía no está completada.'
                 );
+
                 return;
             }
 

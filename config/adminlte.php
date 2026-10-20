@@ -358,7 +358,7 @@ return [
         ],
 
         [
-            'text' => 'Áreas',
+            'text' => 'Áreas y Sucursales',
             'route' => 'dashboard.industries',
             'icon' => 'fas fa-fw fa-building',
             'can' => 'manage-production',

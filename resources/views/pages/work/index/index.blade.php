@@ -1,3 +1,4 @@
+
 @php
     $role = auth()->user()->role;
 
@@ -22,23 +23,19 @@
             </small>
         </div>
 
-        @if(auth()->user()->role == \App\Enums\Role::WORKER)
-        {{-- RELOJ --}}
-        <div class="col-md-4 col-12 text-md-right mt-2 mt-md-0">
-            <div class="card card-outline card-info mb-0">
-                <div class="card-body py-2">
-                    <div class="text-muted small">
-                        <i class="far fa-calendar-alt mr-1"></i>
-                        Fecha y hora actual
-                    </div>
+        @if ($isWorker)
+            <div class="col-md-4 col-12 text-md-right mt-2 mt-md-0">
+                <div class="card card-outline card-info mb-0">
+                    <div class="card-body py-2">
+                        <div class="text-muted small">
+                            <i class="far fa-calendar-alt mr-1"></i>
+                            Fecha y hora actual
+                        </div>
 
-                    <div
-                        x-data="{
+                        <div x-data="{
                             now: new Date(),
                             init() {
-                                setInterval(() => {
-                                    this.now = new Date();
-                                }, 1000);
+                                setInterval(() => this.now = new Date(), 1000);
                             },
                             get dateText() {
                                 return this.now.toLocaleDateString('es-BO', {
@@ -56,24 +53,21 @@
                                     hour12: false
                                 });
                             }
-                        }"
-                    >
-                        <div class="font-weight-bold text-capitalize"
-                             x-text="dateText"></div>
-                        <h4 class="mb-0 text-info">
-                            <i class="far fa-clock mr-1"></i>
-                            <span x-text="timeText"></span>
-                        </h4>
+                        }">
+                            <div class="font-weight-bold text-capitalize"
+                                 x-text="dateText"></div>
+                            <h4 class="mb-0 text-info">
+                                <i class="far fa-clock mr-1"></i>
+                                <span x-text="timeText"></span>
+                            </h4>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
         @endif
     </div>
 
-    {{-- ====================================================== --}}
     {{-- RECEPCIÓN --}}
-    {{-- ====================================================== --}}
     @if ($isReception)
 
         @forelse ($receptionContracts as $contract)
@@ -93,8 +87,8 @@
                     </h3>
 
                     <div class="card-tools">
-                        <span class="badge badge-info">
-                            Prioridad {{ $contract['priority'] }}
+                        <span class="badge badge-{{ $contract['priority_badge'] }}">
+                            {{ $contract['priority_label'] }}
                         </span>
                     </div>
                 </div>
@@ -105,17 +99,14 @@
                             <small class="text-muted">Solicitado</small>
                             <h5>{{ $contract['quantity'] }}</h5>
                         </div>
-
                         <div class="col-md-3 col-6">
                             <small class="text-muted">Fabricado</small>
                             <h5 class="text-success">{{ $contract['progress'] }}</h5>
                         </div>
-
                         <div class="col-md-3 col-6">
                             <small class="text-muted">Pendiente</small>
                             <h5 class="text-danger">{{ $contract['pending'] }}</h5>
                         </div>
-
                         <div class="col-md-3 col-6">
                             <small class="text-muted">Avance</small>
                             <h5>{{ $contract['percentage'] }}%</h5>
@@ -166,15 +157,13 @@
             </div>
         @endforelse
 
-    {{-- ====================================================== --}}
-    {{-- GESTIÓN: ENSAMBLAJES Y PROCESOS --}}
-    {{-- ====================================================== --}}
+    {{-- GESTIÓN --}}
     @elseif ($isManagement)
 
         <div class="card">
             <div class="card-body">
                 <label for="assemblySearch">
-                    Buscar ensamblaje, contrato, proforma o proceso
+                    Buscar ensamblajes, contratos, proformas, procesos o etiquetas
                 </label>
 
                 <div class="input-group">
@@ -188,22 +177,25 @@
                         id="assemblySearch"
                         type="search"
                         class="form-control"
-                        placeholder="Ej.: mesa, proforma 102, corte..."
+                        placeholder="Ej.: cuello alto, mesa, proforma 102..."
                         wire:model.live.debounce.350ms="search"
                     />
 
                     @if ($search !== '')
                         <div class="input-group-append">
-                            <button
-                                type="button"
-                                class="btn btn-outline-secondary"
-                                wire:click="$set('search', '')"
-                            >
+                            <button type="button"
+                                    class="btn btn-outline-secondary"
+                                    wire:click="$set('search', '')">
                                 Limpiar
                             </button>
                         </div>
                     @endif
                 </div>
+
+                <small class="form-text text-muted">
+                    Puedes combinar términos. Por ejemplo, «cuello alto»
+                    busca coincidencias entre nombres y valores de etiquetas.
+                </small>
             </div>
         </div>
 
@@ -229,16 +221,18 @@
                     </h3>
 
                     <div class="card-tools">
+                        <span class="badge badge-{{ $assembly['priority_badge'] }}">
+                            {{ $assembly['priority_label'] }}
+                        </span>
+
                         <span class="badge badge-primary">
                             {{ $assembly['percentage'] }}%
                         </span>
 
-                        <button
-                            type="button"
-                            class="btn btn-tool"
-                            data-card-widget="collapse"
-                            aria-label="Mostrar u ocultar ensamblaje"
-                        >
+                        <button type="button"
+                                class="btn btn-tool"
+                                data-card-widget="collapse"
+                                aria-label="Mostrar u ocultar ensamblaje">
                             <i class="fas fa-minus"></i>
                         </button>
                     </div>
@@ -264,6 +258,25 @@
                         @endif
                     </div>
 
+                    {{-- ETIQUETAS DEL DETALLE DEL CONTRATO --}}
+                    @if (!empty($assembly['detail_contract_tags']))
+                        <div class="mb-3">
+                            <small class="font-weight-bold">
+                                <i class="fas fa-file-contract mr-1"></i>
+                                Especificaciones del contrato
+                            </small>
+                            <div>
+                                @foreach ($assembly['detail_contract_tags'] as $tag)
+                                    <span class="badge badge-primary mr-1 mb-1"
+                                          wire:key="assembly-detail-tag-{{ $assembly['id'] }}-{{ $loop->index }}">
+                                        {{ $tag['name'] }}: {{ $tag['value'] }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- ETIQUETAS DEL PRODUCTO --}}
                     @if (!empty($assembly['product_tags']))
                         <div class="mb-3">
                             <small class="font-weight-bold">
@@ -271,10 +284,8 @@
                             </small>
                             <div>
                                 @foreach ($assembly['product_tags'] as $tag)
-                                    <span
-                                        class="badge badge-info mr-1 mb-1"
-                                        wire:key="assembly-tag-{{ $assembly['id'] }}-{{ $loop->index }}"
-                                    >
+                                    <span class="badge badge-info mr-1 mb-1"
+                                          wire:key="assembly-product-tag-{{ $assembly['id'] }}-{{ $loop->index }}">
                                         {{ $tag['name'] }}: {{ $tag['value'] }}
                                     </span>
                                 @endforeach
@@ -303,12 +314,9 @@
                         </div>
                     </div>
 
-                    {{-- REGISTRAR ENSAMBLAJE --}}
                     @if ($assembly['pending'] > 0)
                         <div class="border rounded p-3 mb-3">
-                            <label>
-                                Registrar unidades terminadas del ensamblaje
-                            </label>
+                            <label>Registrar unidades terminadas del ensamblaje</label>
 
                             <div class="input-group">
                                 <input
@@ -322,12 +330,10 @@
                                 />
 
                                 <div class="input-group-append">
-                                    <button
-                                        type="button"
-                                        class="btn btn-primary"
-                                        wire:click="registerProgress('assembly', {{ $assembly['id'] }})"
-                                        wire:loading.attr="disabled"
-                                    >
+                                    <button type="button"
+                                            class="btn btn-primary"
+                                            wire:click="registerProgress('assembly', {{ $assembly['id'] }})"
+                                            wire:loading.attr="disabled">
                                         <i class="fas fa-plus mr-1"></i>
                                         Registrar
                                     </button>
@@ -335,26 +341,22 @@
                             </div>
 
                             @error('progressInputs.assembly-' . $assembly['id'])
-                                <small class="text-danger d-block mt-1">
-                                    {{ $message }}
-                                </small>
+                                <small class="text-danger d-block mt-1">{{ $message }}</small>
                             @enderror
                         </div>
                     @else
                         <div class="text-right mb-3">
-                            <button
-                                type="button"
-                                class="btn btn-success"
-                                wire:click="finishTask('assembly', {{ $assembly['id'] }})"
-                                wire:loading.attr="disabled"
-                            >
+                            <button type="button"
+                                    class="btn btn-success"
+                                    wire:click="finishTask('assembly', {{ $assembly['id'] }})"
+                                    wire:loading.attr="disabled">
                                 <i class="fas fa-check mr-1"></i>
                                 Finalizar ensamblaje
                             </button>
                         </div>
                     @endif
 
-                    {{-- PROCESOS DEL ENSAMBLAJE --}}
+                    {{-- PROCESOS --}}
                     <div class="border-top pt-3 mt-3">
                         <h5 class="mb-3">
                             <i class="fas fa-tools mr-1"></i>
@@ -365,10 +367,9 @@
                         </h5>
 
                         @forelse ($assembly['processes'] as $process)
-                            <div
-                                class="border rounded p-3 mb-3"
-                                wire:key="process-{{ $process['id'] }}"
-                            >
+                            <div class="border rounded p-3 mb-3"
+                                 wire:key="management-process-{{ $process['id'] }}">
+
                                 <div class="d-flex flex-wrap justify-content-between">
                                     <div>
                                         <h6 class="font-weight-bold mb-1">
@@ -386,22 +387,26 @@
                                         </small>
                                     </div>
 
-                                    <span class="badge badge-info align-self-start">
-                                        {{ $process['percentage'] }}%
-                                    </span>
+                                    <div>
+                                        <span class="badge badge-{{ $process['priority_badge'] }}">
+                                            {{ $process['priority_label'] }}
+                                        </span>
+                                        <span class="badge badge-info">
+                                            {{ $process['percentage'] }}%
+                                        </span>
+                                    </div>
                                 </div>
 
-                                @if (!empty($process['component_tags']))
+                                {{-- ETIQUETAS DEL DETALLE --}}
+                                @if (!empty($process['detail_contract_tags']))
                                     <div class="mt-2">
                                         <small class="font-weight-bold">
-                                            Etiquetas globales del componente
+                                            Especificaciones del contrato
                                         </small>
                                         <div>
-                                            @foreach ($process['component_tags'] as $tag)
-                                                <span
-                                                    class="badge badge-info mr-1 mb-1"
-                                                    wire:key="component-tag-{{ $process['id'] }}-{{ $loop->index }}"
-                                                >
+                                            @foreach ($process['detail_contract_tags'] as $tag)
+                                                <span class="badge badge-sucess mr-1 mb-1"
+                                                      wire:key="process-detail-tag-{{ $process['id'] }}-{{ $loop->index }}">
                                                     {{ $tag['name'] }}: {{ $tag['value'] }}
                                                 </span>
                                             @endforeach
@@ -409,17 +414,50 @@
                                     </div>
                                 @endif
 
+                                {{-- ETIQUETAS DEL PRODUCTO --}}
+                                @if (!empty($process['product_tags']))
+                                    <div class="mt-2">
+                                        <small class="font-weight-bold">
+                                            Etiquetas globales del producto
+                                        </small>
+                                        <div>
+                                            @foreach ($process['product_tags'] as $tag)
+                                                <span class="badge badge-info mr-1 mb-1"
+                                                      wire:key="process-product-tag-{{ $process['id'] }}-{{ $loop->index }}">
+                                                    {{ $tag['name'] }}: {{ $tag['value'] }}
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+
+                                {{-- ETIQUETAS DEL COMPONENTE --}}
+                                @if (!empty($process['component_tags']))
+                                    <div class="mt-2">
+                                        <small class="font-weight-bold">
+                                            Etiquetas globales del componente
+                                        </small>
+                                        <div>
+                                            @foreach ($process['component_tags'] as $tag)
+                                                <span class="badge badge-info mr-1 mb-1"
+                                                      wire:key="process-component-tag-{{ $process['id'] }}-{{ $loop->index }}">
+                                                    {{ $tag['name'] }}: {{ $tag['value'] }}
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+
+                                {{-- ETIQUETAS DEL PROCESO --}}
                                 @if (!empty($process['process_tags']))
                                     <div class="mt-2">
                                         <small class="font-weight-bold">
-                                            Etiquetas de su proceso/área
+                                            Etiquetas del proceso/área
                                         </small>
                                         <div>
                                             @foreach ($process['process_tags'] as $tag)
-                                                <span
-                                                    class="badge badge-warning mr-1 mb-1"
-                                                    wire:key="process-tag-{{ $process['id'] }}-{{ $loop->index }}"
-                                                >
+                                                <span class="badge badge-secondary mr-1 mb-1"
+                                                      wire:key="process-own-tag-{{ $process['id'] }}-{{ $loop->index }}">
                                                     {{ $tag['name'] }}: {{ $tag['value'] }}
                                                 </span>
                                             @endforeach
@@ -448,7 +486,6 @@
                                     </div>
                                 </div>
 
-                                {{-- REGISTRAR PROCESO --}}
                                 @if ($process['pending'] > 0)
                                     <label>Registrar unidades procesadas</label>
 
@@ -464,12 +501,10 @@
                                         />
 
                                         <div class="input-group-append">
-                                            <button
-                                                type="button"
-                                                class="btn btn-info"
-                                                wire:click="registerProgress('component', {{ $process['id'] }})"
-                                                wire:loading.attr="disabled"
-                                            >
+                                            <button type="button"
+                                                    class="btn btn-info"
+                                                    wire:click="registerProgress('component', {{ $process['id'] }})"
+                                                    wire:loading.attr="disabled">
                                                 <i class="fas fa-plus mr-1"></i>
                                                 Registrar proceso
                                             </button>
@@ -477,18 +512,14 @@
                                     </div>
 
                                     @error('progressInputs.component-' . $process['id'])
-                                        <small class="text-danger d-block mt-1">
-                                            {{ $message }}
-                                        </small>
+                                        <small class="text-danger d-block mt-1">{{ $message }}</small>
                                     @enderror
                                 @else
                                     <div class="text-right">
-                                        <button
-                                            type="button"
-                                            class="btn btn-success btn-sm"
-                                            wire:click="finishTask('component', {{ $process['id'] }})"
-                                            wire:loading.attr="disabled"
-                                        >
+                                        <button type="button"
+                                                class="btn btn-success btn-sm"
+                                                wire:click="finishTask('component', {{ $process['id'] }})"
+                                                wire:loading.attr="disabled">
                                             <i class="fas fa-check mr-1"></i>
                                             Finalizar proceso
                                         </button>
@@ -506,19 +537,18 @@
         @empty
             <div class="alert alert-info">
                 @if ($search !== '')
-                    No se encontraron ensamblajes ni procesos para "{{ $search }}".
+                    No se encontraron ensamblajes ni procesos para
+                    «{{ $search }}».
                 @else
                     No hay ensamblajes ni procesos pendientes de registro.
                 @endif
             </div>
         @endforelse
 
-    {{-- ====================================================== --}}
     {{-- TRABAJADORES --}}
-    {{-- ====================================================== --}}
     @elseif ($isWorker)
 
-        {{-- TAREAS ASIGNADAS AL ÁREA --}}
+        {{-- TAREAS ASIGNADAS --}}
         <div class="card card-outline card-warning">
             <div class="card-header">
                 <h3 class="card-title">
@@ -557,7 +587,7 @@
 
                         @if ($task['description'])
                             <p class="text-muted mb-0 mt-2">
-                                    {!! nl2br(e($task['description'])) !!}
+                                {!! nl2br(e($task['description'])) !!}
                             </p>
                         @endif
                     </div>
@@ -569,7 +599,7 @@
             </div>
         </div>
 
-        {{-- ENSAMBLAJES DEL TRABAJADOR --}}
+        {{-- ENSAMBLAJES DEL ÁREA --}}
         <h5 class="mb-3">
             <i class="fas fa-cubes mr-1"></i>
             Ensamblajes de mi área
@@ -589,22 +619,41 @@
                             @endif
                         </div>
 
-                        <span class="badge badge-info">
-                            {{ $assembly['percentage'] }}%
-                        </span>
+                        <div>
+                            <span class="badge badge-{{ $assembly['priority_badge'] }}">
+                                {{ $assembly['priority_label'] }}
+                            </span>
+                            <span class="badge badge-info">
+                                {{ $assembly['percentage'] }}%
+                            </span>
+                        </div>
                     </div>
 
-                    @if (!empty($assembly['product_tags']))
+                    @if (!empty($assembly['detail_contract_tags']))
                         <div class="mt-3">
+                            <small class="font-weight-bold">
+                                Especificaciones del contrato
+                            </small>
+                            <div>
+                                @foreach ($assembly['detail_contract_tags'] as $tag)
+                                    <span class="badge badge-warning mr-1 mb-1"
+                                          wire:key="worker-assembly-detail-tag-{{ $assembly['id'] }}-{{ $loop->index }}">
+                                        {{ $tag['name'] }}: {{ $tag['value'] }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    @if (!empty($assembly['product_tags']))
+                        <div class="mt-2">
                             <small class="font-weight-bold">
                                 Etiquetas globales del producto
                             </small>
                             <div>
                                 @foreach ($assembly['product_tags'] as $tag)
-                                    <span
-                                        class="badge badge-info mr-1 mb-1"
-                                        wire:key="worker-assembly-tag-{{ $assembly['id'] }}-{{ $loop->index }}"
-                                    >
+                                    <span class="badge badge-info mr-1 mb-1"
+                                          wire:key="worker-assembly-product-tag-{{ $assembly['id'] }}-{{ $loop->index }}">
                                         {{ $tag['name'] }}: {{ $tag['value'] }}
                                     </span>
                                 @endforeach
@@ -640,7 +689,7 @@
             </div>
         @endforelse
 
-        {{-- PROCESOS DEL TRABAJADOR --}}
+        {{-- PROCESOS DEL ÁREA --}}
         <h5 class="mb-3 mt-4">
             <i class="fas fa-tools mr-1"></i>
             Procesos de mi área
@@ -652,7 +701,6 @@
                     <div class="d-flex justify-content-between flex-wrap">
                         <div>
                             <h5>{{ $process['component_name'] }}</h5>
-
                             <small class="text-muted">
                                 Producto: {{ $process['product_name'] }}
                             </small>
@@ -665,64 +713,36 @@
                             @endif
                         </div>
 
-                        <span class="badge badge-info">
-                            {{ $process['percentage'] }}%
-                        </span>
+                        <div>
+                            <span class="badge badge-{{ $process['priority_badge'] }}">
+                                {{ $process['priority_label'] }}
+                            </span>
+                            <span class="badge badge-info">
+                                {{ $process['percentage'] }}%
+                            </span>
+                        </div>
                     </div>
 
-                    @if (!empty($process['product_tags']))
-                        <div class="mt-3">
-                            <small class="font-weight-bold">
-                                Etiquetas globales del producto
-                            </small>
-                            <div>
-                                @foreach ($process['product_tags'] as $tag)
-                                    <span
-                                        class="badge badge-info mr-1 mb-1"
-                                        wire:key="worker-process-product-tag-{{ $process['id'] }}-{{ $loop->index }}"
-                                    >
-                                        {{ $tag['name'] }}: {{ $tag['value'] }}
-                                    </span>
-                                @endforeach
+                    @foreach ([
+                        'detail_contract_tags' => ['Especificaciones del contrato', 'warning'],
+                        'product_tags' => ['Etiquetas globales del producto', 'info'],
+                        'component_tags' => ['Etiquetas globales del componente', 'info'],
+                        'process_tags' => ['Etiquetas de mi área', 'secondary'],
+                    ] as $tagKey => [$tagTitle, $tagColor])
+                        @if (!empty($process[$tagKey]))
+                            <div class="mt-2">
+                                <small class="font-weight-bold">{{ $tagTitle }}</small>
+                                <div>
+                                    @foreach ($process[$tagKey] as $tag)
+                                        <span class="badge badge-{{ $tagColor }} mr-1 mb-1"
+                                              wire:key="worker-process-{{ $tagKey }}-{{ $process['id'] }}-{{ $loop->index }}">
+                                            {{ $tag['name'] }}: {{ $tag['value'] }}
+                                        </span>
+                                    @endforeach
+                                </div>
                             </div>
-                        </div>
-                    @endif
-
-                    @if (!empty($process['component_tags']))
-                        <div class="mt-2">
-                            <small class="font-weight-bold">
-                                Etiquetas globales del componente
-                            </small>
-                            <div>
-                                @foreach ($process['component_tags'] as $tag)
-                                    <span
-                                        class="badge badge-info mr-1 mb-1"
-                                        wire:key="worker-process-component-tag-{{ $process['id'] }}-{{ $loop->index }}"
-                                    >
-                                        {{ $tag['name'] }}: {{ $tag['value'] }}
-                                    </span>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
-
-                    @if (!empty($process['process_tags']))
-                        <div class="mt-2">
-                            <small class="font-weight-bold">
-                                Etiquetas de mi área
-                            </small>
-                            <div>
-                                @foreach ($process['process_tags'] as $tag)
-                                    <span
-                                        class="badge badge-warning mr-1 mb-1"
-                                        wire:key="worker-process-own-tag-{{ $process['id'] }}-{{ $loop->index }}"
-                                    >
-                                        {{ $tag['name'] }}: {{ $tag['value'] }}
-                                    </span>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
+                        @endif
+                    @endforeach
 
                     <div class="progress my-3" style="height: 8px;">
                         <div class="progress-bar bg-success"

@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Type;
 use App\Models\Assembly;
 use App\Models\AssemblyComponent;
 use App\Models\Contract;
@@ -21,7 +22,7 @@ new class extends Component
     {
         $this->contract = $contract;
 
-        $this->industries = Industry::orderBy('name')->get();
+        $this->industries = Industry::where('type',Type::INDUSTRY)->orderBy('name')->get();
 
         $this->loadContract();
     }

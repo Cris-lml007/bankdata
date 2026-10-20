@@ -389,7 +389,7 @@ new class extends Component
                         $contract->destination,
 
                     'priority' =>
-                        (int) ($contract->priority ?? 5),
+                        ($contract->priority->value ?? 5),
 
                     'status' =>
                         $contract->status,

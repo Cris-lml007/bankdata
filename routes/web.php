@@ -111,7 +111,7 @@ Route::prefix('/dashboard')
             ->name('dashboard.users');
 
         Route::livewire('/tasks', 'pages::tasks.index')
-            ->middleware('can:manage-production')
+            ->middleware('can:view-work-panel')
             ->name('dashboard.tasks');
 
 
