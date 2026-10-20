@@ -37,6 +37,7 @@ new class extends Component
 
         $heads = [
             'Nombre' => 'name',
+            'Productos Enlazados' => null,
             'Acciones' => null,
         ];
 

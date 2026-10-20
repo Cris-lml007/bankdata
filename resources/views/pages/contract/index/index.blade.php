@@ -18,6 +18,7 @@
                 <td>
                     {{ $contract->id }}
                 </td>
+                <td>{{ $contract->external_id ?? '---' }}</td>
 
                 <td>
                     {{ $contract->customer?->name ?? 'Sin cliente' }}

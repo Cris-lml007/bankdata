@@ -294,28 +294,23 @@ new class extends Component
     {
         $users = User::query()
             ->with('industry')
-            ->when(
-                trim($this->search) !== '',
-                function ($query) {
+            ->when(trim($this->search) !== '', function ($query) {
+                $terms = preg_split(
+                    '/\s+/u',
+                    trim($this->search),
+                    -1,
+                    PREG_SPLIT_NO_EMPTY
+                );
 
-                    $search =
-                        trim($this->search);
-
-                    $query->where(function ($query) use ($search) {
-
-                        $query->where(
-                            'name',
-                            'like',
-                            "%{$search}%"
-                        )
-                            ->orWhere(
-                                'username',
-                                'like',
-                                "%{$search}%"
-                            );
-                    });
-                }
-            )
+                $query->where(function ($q) use ($terms) {
+                    foreach ($terms as $term) {
+                        $q->where(function ($sub) use ($term) {
+                            $sub->where('name', 'like', "%{$term}%")
+                                ->orWhere('username', 'like', "%{$term}%");
+                        });
+                    }
+                });
+            })
             ->orderBy('name')
             ->paginate(15);
 

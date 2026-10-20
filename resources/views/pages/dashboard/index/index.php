@@ -70,66 +70,56 @@ new class extends Component
         $search = trim($this->search);
 
         if ($search !== '') {
+            $terms = preg_split('/\s+/u', $search, -1, PREG_SPLIT_NO_EMPTY);
 
-            $query->where(function ($q) use ($search) {
+            $query->where(function ($q) use ($terms) {
+                foreach ($terms as $term) {
+                    $q->where(function ($sub) use ($term) {
 
-                /*
+                        /*
                 | Contrato
                 */
-                if (is_numeric($search)) {
-                    $q->orWhere('id', $search);
-                }
+                        if (is_numeric($term)) {
+                            $sub->orWhere('id', $term);
+                        }
 
-                /*
+                        /*
                 | Destino
                 */
-                $q->orWhere(
-                    'destination',
-                    'like',
-                    "%{$search}%"
-                );
+                        $sub->orWhere('destination', 'like', "%{$term}%");
 
-                /*
+                        /*
                 | Cliente
                 */
-                $q->orWhereHas('customer', function ($customer) use ($search) {
+                        $sub->orWhereHas('customer', function ($customer) use ($term) {
+                            $customer
+                                ->where('name', 'like', "%{$term}%")
+                                ->orWhere('ci_nit', 'like', "%{$term}%")
+                                ->orWhere('organization', 'like', "%{$term}%");
+                        });
 
-                    $customer
-                        ->where('name', 'like', "%{$search}%")
-                        ->orWhere('ci_nit', 'like', "%{$search}%")
-                        ->orWhere('organization', 'like', "%{$search}%");
-                });
-
-                /*
+                        /*
                 | Productos
                 */
-                $q->orWhereHas('details.product', function ($product) use ($search) {
+                        $sub->orWhereHas('details.product', function ($product) use ($term) {
+                            $product
+                                ->where('name', 'like', "%{$term}%")
+                                ->orWhere('cod', 'like', "%{$term}%");
+                        });
 
-                    $product
-                        ->where('name', 'like', "%{$search}%")
-                        ->orWhere('cod', 'like', "%{$search}%");
-                });
-
-                /*
+                        /*
                 | Piezas
                 */
-                $q->orWhereHas(
-                    'assemblies.components.component',
-                    function ($component) use ($search) {
-
-                        $component
-                            ->where(
-                                'name',
-                                'like',
-                                "%{$search}%"
-                            )
-                            ->orWhere(
-                                'description',
-                                'like',
-                                "%{$search}%"
-                            );
-                    }
-                );
+                        $sub->orWhereHas(
+                            'assemblies.components.component',
+                            function ($component) use ($term) {
+                                $component
+                                    ->where('name', 'like', "%{$term}%")
+                                    ->orWhere('description', 'like', "%{$term}%");
+                            }
+                        );
+                    });
+                }
             });
         }
 
@@ -230,87 +220,38 @@ new class extends Component
                 $componentProgress
             ) {
 
-                $products = $contract->details
-                    ->map(function ($detail) use (
-                        $contract,
-                        $assemblyProgress,
-                        $componentProgress
-                    ) {
+                    $products = $contract->details
+                        ->map(function ($detail) use (
+                            $contract,
+                            $assemblyProgress,
+                            $componentProgress
+                        ) {
 
-                        $assemblies = $contract->assemblies
-                            ->where(
-                                'product_id',
-                                $detail->product_id
-                            );
+                                $assemblies = $contract->assemblies
+                                    ->where(
+                                        'product_id',
+                                        $detail->product_id
+                                    );
 
-                        /*
+                                /*
                         |--------------------------------------------------------------------------
                         | PROGRESO DEL PRODUCTO
                         |--------------------------------------------------------------------------
                         */
 
-                        $progress = $assemblies
-                            ->sum(function ($assembly) use (
-                                $assemblyProgress
-                            ) {
-
-                                return (int) (
-                                    $assemblyProgress[
-                                    $assembly->id
-                                    ] ?? 0
-                                );
-                            });
-
-                        $required = (int) $detail->quantity;
-
-                        $pending = max(
-                            0,
-                            $required - $progress
-                        );
-
-                        $percentage = $required > 0
-                            ? min(
-                                100,
-                                round(
-                                    ($progress / $required) * 100
-                                )
-                            )
-                            : 0;
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | PIEZAS
-                        |--------------------------------------------------------------------------
-                        */
-
-                        $components = $assemblies
-                            ->flatMap(
-                                fn ($assembly) =>
-                                $assembly->components
-                            )
-                            ->groupBy('component_id')
-                            ->map(function ($items) use (
-                                $componentProgress
-                            ) {
-
-                                $first = $items->first();
-
-                                $required = (int) $items->sum(
-                                    'quantity'
-                                );
-
-                                $progress = (int) $items->sum(
-                                    function ($component) use (
-                                        $componentProgress
+                                $progress = $assemblies
+                                    ->sum(function ($assembly) use (
+                                        $assemblyProgress
                                     ) {
 
-                                        return (int) (
-                                            $componentProgress[
-                                            $component->id
-                                            ] ?? 0
-                                        );
-                                    }
-                                );
+                                            return (int) (
+                                                $assemblyProgress[
+                                                    $assembly->id
+                                                ] ?? 0
+                                            );
+                                        });
+
+                                $required = (int) $detail->quantity;
 
                                 $pending = max(
                                     0,
@@ -318,23 +259,96 @@ new class extends Component
                                 );
 
                                 $percentage = $required > 0
-                                    ? min(
-                                        100,
-                                        round(
-                                            ($progress / $required) * 100
-                                        )
+                                ? min(
+                                    100,
+                                    round(
+                                        ($progress / $required) * 100
                                     )
-                                    : 0;
+                                )
+                                : 0;
+
+                                /*
+                        |--------------------------------------------------------------------------
+                        | PIEZAS
+                        |--------------------------------------------------------------------------
+                        */
+
+                                $components = $assemblies
+                                    ->flatMap(
+                                        fn ($assembly) =>
+                                        $assembly->components
+                                    )
+                                    ->groupBy('component_id')
+                                    ->map(function ($items) use (
+                                        $componentProgress
+                                    ) {
+
+                                            $first = $items->first();
+
+                                            $required = (int) $items->sum(
+                                                'quantity'
+                                            );
+
+                                            $progress = (int) $items->sum(
+                                                function ($component) use (
+                                                $componentProgress
+                                            ) {
+
+                                                    return (int) (
+                                                        $componentProgress[
+                                                            $component->id
+                                                        ] ?? 0
+                                                    );
+                                                }
+                                            );
+
+                                            $pending = max(
+                                                0,
+                                                $required - $progress
+                                            );
+
+                                            $percentage = $required > 0
+                                            ? min(
+                                                100,
+                                                round(
+                                                    ($progress / $required) * 100
+                                                )
+                                            )
+                                            : 0;
+
+                                            return [
+                                                'id' => $first->component_id,
+
+                                                'name' =>
+                                                $first->component?->name
+                                                    ?? 'Pieza',
+
+                                                'description' =>
+                                                $first->component?->description
+                                                    ?? '',
+
+                                                'required' => $required,
+
+                                                'progress' => $progress,
+
+                                                'pending' => $pending,
+
+                                                'percentage' => $percentage,
+                                            ];
+                                        })
+                                    ->sortBy('name')
+                                    ->values()
+                                    ->all();
 
                                 return [
-                                    'id' => $first->component_id,
+                                    'id' => $detail->product_id,
 
                                     'name' =>
-                                        $first->component?->name
-                                        ?? 'Pieza',
+                                    $detail->product?->name
+                                        ?? 'Producto',
 
                                     'description' =>
-                                        $first->component?->description
+                                    $detail->product?->description
                                         ?? '',
 
                                     'required' => $required,
@@ -344,63 +358,39 @@ new class extends Component
                                     'pending' => $pending,
 
                                     'percentage' => $percentage,
+
+                                    'components' => $components,
                                 ];
                             })
-                            ->sortBy('name')
-                            ->values()
-                            ->all();
+                        ->values()
+                        ->all();
 
-                        return [
-                            'id' => $detail->product_id,
+                    return [
+                        'id' => $contract->id,
 
-                            'name' =>
-                                $detail->product?->name
-                                ?? 'Producto',
-
-                            'description' =>
-                                $detail->product?->description
-                                ?? '',
-
-                            'required' => $required,
-
-                            'progress' => $progress,
-
-                            'pending' => $pending,
-
-                            'percentage' => $percentage,
-
-                            'components' => $components,
-                        ];
-                    })
-                    ->values()
-                    ->all();
-
-                return [
-                    'id' => $contract->id,
-
-                    'customer' =>
+                        'customer' =>
                         $contract->customer?->name
-                        ?? 'Cliente anónimo',
+                            ?? 'Cliente anónimo',
 
-                    'delivery_date' =>
+                        'delivery_date' =>
                         $contract->delivery_date,
 
-                    'destination' =>
+                        'destination' =>
                         $contract->destination,
 
-                    'priority' =>
+                        'priority' =>
                         ($contract->priority->value ?? 5),
 
-                    'status' =>
+                        'status' =>
                         $contract->status,
 
-                    'status_value' =>
+                        'status_value' =>
                         $contract->status?->value
-                        ?? $contract->status,
+                            ?? $contract->status,
 
-                    'products' => $products,
-                ];
-            })
+                        'products' => $products,
+                    ];
+                })
             ->values()
             ->all();
     }

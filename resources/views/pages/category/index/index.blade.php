@@ -21,7 +21,8 @@
 
         @foreach ($this->categories as $category)
             <tr>
-                <td>{{ $category->name }}</td>
+            <td>{{ $category->name }}</td>
+            <td>{{ $category->products->count() }}</td>
 
                 <td>
                     <button

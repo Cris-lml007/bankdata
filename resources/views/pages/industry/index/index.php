@@ -19,23 +19,30 @@ new class extends Component
     {
         return Industry::query()
             ->with('typeFactory')
-            ->when($this->search != '', function ($query) {
-                $query->where(function ($query) {
-                    $query->where(
-                        'name',
-                        'like',
-                        "%{$this->search}%"
-                    )
-                        ->orWhere(
-                            'address',
-                            'like',
-                            "%{$this->search}%"
-                        )
-                        ->orWhere(
-                            'phone',
-                            'like',
-                            "%{$this->search}%"
-                        );
+            ->when(trim($this->search) !== '', function ($query) {
+                $terms = preg_split(
+                    '/\s+/u',
+                    trim($this->search),
+                    -1,
+                    PREG_SPLIT_NO_EMPTY
+                );
+
+                $query->where(function ($q) use ($terms) {
+                    foreach ($terms as $term) {
+                        $q->where(function ($sub) use ($term) {
+                            $sub->where('name', 'like', "%{$term}%")
+                                ->orWhere('address', 'like', "%{$term}%")
+                                ->orWhere('phone', 'like', "%{$term}%");
+
+                            foreach (\App\Enums\Type::cases() as $type) {
+                                if (
+                                    mb_stripos($type->label(), $term) !== false
+                                ) {
+                                    $sub->orWhere('type', $type->value);
+                                }
+                            }
+                        });
+                    }
                 });
             })
             ->orderBy(

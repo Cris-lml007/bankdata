@@ -16,17 +16,34 @@ new class extends Component
 
     #[Computed]
     public function products(){
-        if($this->search != ''){
-            return Product::where('cod','like',"%{ $this->search }%")
-                ->orWhere('name','like',"%{ $this->search }%")
-                ->orWhere('model','like',"%{ $this->search }%")
-                ->orWhere('price_sale','like',"%{ $this->search }%")
-                ->orderBy($this->list['sort_by'],$this->list['sort_direction'])
-                ->paginate();
-        }else{
-            return Product::orderBy($this->list['sort_by'],$this->list['sort_direction'])
-                ->paginate();
+        $search = trim($this->search);
+
+        $query = Product::query();
+
+        if ($search !== '') {
+            $terms = preg_split('/\s+/u', $search, -1, PREG_SPLIT_NO_EMPTY);
+
+            $query->where(function ($q) use ($terms) {
+                foreach ($terms as $term) {
+                    $q->where(function ($sub) use ($term) {
+                        $sub->where('cod', 'like', "%{$term}%")
+                            ->orWhere('name', 'like', "%{$term}%")
+                            ->orWhere('model', 'like', "%{$term}%")
+                            ->orWhere('price_sale', 'like', "%{$term}%")
+                            ->orWhereHas('categories',function ($w) use($term){
+                                $w->where('name','like',"%{$term}%");
+                            });
+                    });
+                }
+            });
         }
+
+        return $query
+            ->orderBy(
+                $this->list['sort_by'],
+                $this->list['sort_direction']
+            )
+            ->paginate();
     }
 
 
@@ -38,6 +55,7 @@ new class extends Component
             'COD' => 'cod',
             'Nombre' => 'name',
             'Modelo' => 'model',
+            'Categorias' => null,
             'Precio de Compra' => 'price_sale',
             'Acciones' => null
         ];

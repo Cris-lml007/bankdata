@@ -74,11 +74,20 @@ new class extends Component {
         return Task::query()
             ->with('industry')
             ->when(trim($this->search) !== '', function ($query) {
-                $search = trim($this->search);
+                $terms = preg_split(
+                    '/\s+/u',
+                    trim($this->search),
+                    -1,
+                    PREG_SPLIT_NO_EMPTY
+                );
 
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('description', 'like', "%{$search}%");
+                $query->where(function ($q) use ($terms) {
+                    foreach ($terms as $term) {
+                        $q->where(function ($sub) use ($term) {
+                            $sub->where('name', 'like', "%{$term}%")
+                                ->orWhere('description', 'like', "%{$term}%");
+                        });
+                    }
                 });
             })
             ->when($this->industryFilter !== '', function ($query) {
@@ -108,8 +117,8 @@ new class extends Component {
             'description' => $task->description ?? '',
             'industry_id' => (string) $task->industry_id,
             'to' => $task->to
-                ? $task->to->format('Y-m-d')
-                : '',
+            ? $task->to->format('Y-m-d')
+            : '',
         ];
 
         $this->resetValidation();
