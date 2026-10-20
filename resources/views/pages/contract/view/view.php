@@ -663,7 +663,7 @@ new class extends Component
             ],
 
             'contractData.priority' =>
-                'required|integer|between:1,5',
+                'required',
 
 
             'customer.ci_nit' =>
