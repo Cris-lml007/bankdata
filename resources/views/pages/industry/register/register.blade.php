@@ -1,6 +1,6 @@
 <x-slot name="header">
 
-    <h1>Nueva Fábrica</h1>
+    <h1>Nueva Area</h1>
 
 </x-slot>
 
@@ -12,7 +12,7 @@
 
             <h3 class="card-title">
                 <i class="fa fa-industry"></i>
-                Datos de la fábrica
+                Datos de la Area
             </h3>
 
         </div>
@@ -27,15 +27,12 @@
 
                         <label>Nombre</label>
 
-                        <input
-                            type="text"
-                            wire:model="industry.name"
+                        <input type="text" wire:model="industry.name"
                             class="form-control @error('industry.name') is-invalid @enderror"
-                            placeholder="Nombre de la fábrica"
-                        >
+                            placeholder="Nombre de la fábrica">
 
                         @error('industry.name')
-                        <span class="invalid-feedback d-block">
+                            <span class="invalid-feedback d-block">
                                 {{ $message }}
                             </span>
                         @enderror
@@ -48,29 +45,25 @@
 
                     <div class="form-group">
 
-                        <label>Tipo de fábrica</label>
+                        <label>Tipo de Area</label>
 
-                        <select
-                            wire:model="industry.type_factory_id"
-                            class="form-control @error('industry.type_factory_id') is-invalid @enderror"
-                        >
+                        <select wire:model="industry.type_factory_id"
+                            class="form-control @error('industry.type_factory_id') is-invalid @enderror">
 
                             <option value="">
                                 Seleccione un tipo
                             </option>
 
                             @foreach ($typeFactories as $typeFactory)
-
                                 <option value="{{ $typeFactory->id }}">
                                     {{ $typeFactory->name }}
                                 </option>
-
                             @endforeach
 
                         </select>
 
                         @error('industry.type_factory_id')
-                        <span class="invalid-feedback d-block">
+                            <span class="invalid-feedback d-block">
                                 {{ $message }}
                             </span>
                         @enderror
@@ -90,15 +83,12 @@
 
                         <label>Dirección</label>
 
-                        <input
-                            type="text"
-                            wire:model="industry.address"
+                        <input type="text" wire:model="industry.address"
                             class="form-control @error('industry.address') is-invalid @enderror"
-                            placeholder="Dirección de la fábrica"
-                        >
+                            placeholder="Dirección de la fábrica">
 
                         @error('industry.address')
-                        <span class="invalid-feedback d-block">
+                            <span class="invalid-feedback d-block">
                                 {{ $message }}
                             </span>
                         @enderror
@@ -113,15 +103,11 @@
 
                         <label>Teléfono</label>
 
-                        <input
-                            type="text"
-                            wire:model="industry.phone"
-                            class="form-control @error('industry.phone') is-invalid @enderror"
-                            placeholder="Teléfono"
-                        >
+                        <input type="text" wire:model="industry.phone"
+                            class="form-control @error('industry.phone') is-invalid @enderror" placeholder="Teléfono">
 
                         @error('industry.phone')
-                        <span class="invalid-feedback d-block">
+                            <span class="invalid-feedback d-block">
                                 {{ $message }}
                             </span>
                         @enderror
@@ -130,6 +116,18 @@
 
                 </div>
 
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <label for="">Area/Sucursal</label>
+                    <select class="form-select" wire:model="industry.type">
+                        <option value="">Seleccione Tipo</option>
+                        @foreach (\App\Enums\Type::cases() as $item)
+                            <option value="{{ $item }}">{{ $item->label() }}</option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
 
         </div>
@@ -141,19 +139,12 @@
 
         <div class="card-body text-right">
 
-            <a
-                href="{{ route('dashboard.industries') }}"
-                class="btn btn-secondary"
-            >
+            <a href="{{ route('dashboard.industries') }}" class="btn btn-secondary">
                 <i class="fa fa-times"></i>
                 Cancelar
             </a>
 
-            <button
-                type="button"
-                wire:click="save"
-                class="btn btn-primary"
-            >
+            <button type="button" wire:click="save" class="btn btn-primary">
                 <i class="fa fa-save"></i>
                 Guardar
             </button>

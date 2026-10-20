@@ -173,31 +173,23 @@
     </div>
 
     {{-- ========================================================= --}}
-    {{-- TABLA 1: PRODUCTOS ORDENADOS                              --}}
+    {{-- TABLA 1: PRODUCTOS ORDENADOS CON SUBFILAS POR ORDEN       --}}
     {{-- ========================================================= --}}
 
     <div class="card card-outline card-info">
         <div class="card-header">
-            <h3 class="card-title">
-                <i class="fas fa-boxes mr-1"></i>
-                Productos ordenados
-            </h3>
+            <h3 class="card-title"><i class="fas fa-boxes mr-1"></i> Productos ordenados</h3>
         </div>
 
         <div class="card-body">
             <div class="row mb-3">
                 <div class="col-md-5">
-                    <input
-                        type="search"
-                        class="form-control"
+                    <input type="search" class="form-control"
                         placeholder="Buscar producto, código o ID..."
-                        wire:model.live.debounce.300ms="searchOrderedProducts"
-                    >
+                        wire:model.live.debounce.300ms="searchOrderedProducts">
                 </div>
-
                 <div class="col-md-7 text-md-right mt-2 mt-md-0">
-                    <span class="text-muted">
-                        Productos encontrados:
+                    <span class="text-muted">Productos encontrados:
                         <strong>{{ $filteredOrderedProducts->count() }}</strong>
                     </span>
                 </div>
@@ -207,96 +199,124 @@
                 <table class="table table-bordered table-striped table-hover">
                     <thead>
                         <tr>
-                            <th>ID</th>
+                            <th>ID producto</th>
                             <th>Código</th>
                             <th>Producto</th>
-                            <th class="text-center">Líneas de pedido</th>
+                            <th>ID orden</th>
+                            <th>ID externo</th>
+                            <th>Datos</th>
                             <th class="text-right">Solicitado</th>
+                            <th class="text-right">Precio</th>
                             <th class="text-right">Fabricado</th>
                             <th class="text-right">Entregado</th>
                             <th class="text-right">Faltante</th>
-                            <th style="min-width: 150px;">Avance</th>
+                            <th style="min-width:150px">Progreso</th>
+                        </tr>
+                        <tr class="bg-light">
+                            @foreach ([
+                                'product_id' => 'ID producto',
+                                'cod' => 'Código',
+                                'name' => 'Producto',
+                                'contract_id' => 'ID orden',
+                                'external_id' => 'ID externo',
+                                'tags_text' => 'Datos',
+                                'requested' => 'Solicitado',
+                                'price' => 'Precio',
+                                'produced' => 'Fabricado',
+                                'delivered' => 'Entregado',
+                                'pending' => 'Faltante',
+                                'progress' => 'Progreso',
+                            ] as $key => $placeholder)
+                                <th>
+                                    <input type="search" class="form-control form-control-sm"
+                                        placeholder="Filtrar {{ $placeholder }}"
+                                        aria-label="Filtrar {{ $placeholder }}"
+                                        wire:model.live.debounce.300ms="orderedColumnFilters.{{ $key }}">
+                                </th>
+                            @endforeach
                         </tr>
                     </thead>
-
                     <tbody>
                         @forelse ($filteredOrderedProducts as $product)
-                            <tr>
+                            <tr class="table-info font-weight-bold">
                                 <td>{{ $product['product_id'] }}</td>
-                                <td>{{ $product['cod'] }}</td>
-                                <td>{{ $product['name'] }}</td>
-
-                                <td class="text-center">
-                                    {{ number_format($product['orders']) }}
+                                <td>
+                                    <a href="#" wire:click.prevent="showProductDetails({{ $product['order_rows']->first()['contract_id'] }}, {{ $product['order_rows']->first()['detail_id'] }})">
+                                        {{ $product['cod'] }}
+                                    </a>
                                 </td>
-
-                                <td class="text-right">
-                                    {{ number_format($product['requested']) }}
+                                <td>
+                                    <a href="#" wire:click.prevent="showProductDetails({{ $product['order_rows']->first()['contract_id'] }}, {{ $product['order_rows']->first()['detail_id'] }})">
+                                        {{ $product['name'] }}
+                                    </a>
+                                    <small class="d-block text-muted">{{ $product['orders'] }} línea(s) de orden</small>
                                 </td>
-
-                                <td class="text-right text-success">
-                                    {{ number_format($product['produced']) }}
-                                </td>
-
-                                <td class="text-right text-primary">
-                                    {{ number_format($product['delivered']) }}
-                                </td>
-
-                                <td class="text-right text-danger">
-                                    {{ number_format($product['pending']) }}
-                                </td>
-
+                                <td colspan="3" class="text-muted">Total del producto</td>
+                                <td class="text-right">{{ number_format($product['requested']) }}</td>
+                                <td class="text-right">—</td>
+                                <td class="text-right text-success">{{ number_format($product['produced']) }}</td>
+                                <td class="text-right text-primary">{{ number_format($product['delivered']) }}</td>
+                                <td class="text-right text-danger">{{ number_format($product['pending']) }}</td>
                                 <td>
                                     <div class="progress">
-                                        <div
-                                            class="progress-bar bg-success"
-                                            role="progressbar"
+                                        <div class="progress-bar bg-success" role="progressbar"
                                             style="width: {{ $product['progress'] }}%"
-                                            aria-valuenow="{{ $product['progress'] }}"
-                                            aria-valuemin="0"
-                                            aria-valuemax="100"
-                                        ></div>
+                                            aria-valuenow="{{ $product['progress'] }}" aria-valuemin="0" aria-valuemax="100"></div>
                                     </div>
+                                    <small>{{ number_format($product['progress'], 1) }}%</small>
+                                </td>
+                            </tr>
 
-                                    <small>
-                                        {{ number_format($product['progress'], 1) }}%
-                                    </small>
-                                </td>
-                            </tr>
+                            @foreach (($product['visible_order_rows'] ?? $product['order_rows']) as $order)
+                                @php
+                                    $orderProgress = $order['requested'] > 0
+                                        ? min(100, round(($order['produced'] / $order['requested']) * 100, 1))
+                                        : 0;
+                                @endphp
+                                <tr>
+                                    <td>{{ $order['product_id'] }}</td>
+                                    <td>
+                                        <a href="#" wire:click.prevent="showProductDetails({{ $order['contract_id'] }}, {{ $order['detail_id'] }})">
+                                            {{ $order['product_cod'] }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <a href="#" wire:click.prevent="showProductDetails({{ $order['contract_id'] }}, {{ $order['detail_id'] }})">
+                                            {{ $order['product_name'] }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <a href="#" wire:click.prevent="showProductDetails({{ $order['contract_id'] }}, {{ $order['detail_id'] }})">
+                                            #{{ $order['contract_id'] }}
+                                        </a>
+                                    </td>
+                                    <td>{{ filled($order['external_id']) ? $order['external_id'] : '—' }}</td>
+                                    <td>
+                                        @forelse ($order['tags'] ?? [] as $tag)
+                                            <span class="badge badge-secondary mr-1 mb-1">{{ $tag['name'] }}: {{ $tag['value'] }}</span>
+                                        @empty
+                                            <span class="text-muted">—</span>
+                                        @endforelse
+                                    </td>
+                                    <td class="text-right">{{ number_format($order['requested']) }}</td>
+                                    <td class="text-right">{{ number_format($order['price'], 2) }}</td>
+                                    <td class="text-right text-success">{{ number_format($order['produced']) }}</td>
+                                    <td class="text-right text-primary">{{ number_format($order['delivered']) }}</td>
+                                    <td class="text-right text-danger">{{ number_format($order['pending']) }}</td>
+                                    <td>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-success" role="progressbar"
+                                                style="width: {{ $orderProgress }}%"
+                                                aria-valuenow="{{ $orderProgress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                        <small>{{ number_format($orderProgress, 1) }}%</small>
+                                    </td>
+                                </tr>
+                            @endforeach
                         @empty
-                            <tr>
-                                <td colspan="9" class="text-center text-muted">
-                                    No se encontraron productos.
-                                </td>
-                            </tr>
+                            <tr><td colspan="12" class="text-center text-muted">No se encontraron productos.</td></tr>
                         @endforelse
                     </tbody>
-
-                    @if ($filteredOrderedProducts->isNotEmpty())
-                        <tfoot>
-                            <tr class="font-weight-bold">
-                                <td colspan="4">Totales mostrados</td>
-
-                                <td class="text-right">
-                                    {{ number_format($filteredOrderedProducts->sum('requested')) }}
-                                </td>
-
-                                <td class="text-right">
-                                    {{ number_format($filteredOrderedProducts->sum('produced')) }}
-                                </td>
-
-                                <td class="text-right">
-                                    {{ number_format($filteredOrderedProducts->sum('delivered')) }}
-                                </td>
-
-                                <td class="text-right">
-                                    {{ number_format($filteredOrderedProducts->sum('pending')) }}
-                                </td>
-
-                                <td></td>
-                            </tr>
-                        </tfoot>
-                    @endif
                 </table>
             </div>
         </div>
@@ -351,6 +371,27 @@
                             <th>Estado de producción</th>
                             <th>Entrega prevista</th>
                         </tr>
+                        <tr class="bg-light">
+                            @foreach ([
+                                'contract_id' => 'Contrato',
+                                'external_id' => 'Proforma externa',
+                                'customer' => 'Cliente',
+                                'destination' => 'Destino',
+                                'product_cod' => 'Código',
+                                'product_name' => 'Producto',
+                                'requested' => 'Solicitado',
+                                'produced' => 'Fabricado',
+                                'delivered' => 'Entregado',
+                                'pending' => 'Faltante',
+                                'priority' => 'Prioridad',
+                                'status_label' => 'Estado',
+                                'delivery_date' => 'Entrega',
+                            ] as $key => $placeholder)
+                                <th><input type="search" class="form-control form-control-sm"
+                                    placeholder="Filtrar {{ $placeholder }}"
+                                    wire:model.live.debounce.300ms="productionColumnFilters.{{ $key }}"></th>
+                            @endforeach
+                        </tr>
                     </thead>
 
                     <tbody>
@@ -364,8 +405,8 @@
 
                                 <td>{{ $row['customer'] }}</td>
                                 <td>{{ $row['destination'] }}</td>
-                                <td>{{ $row['product_cod'] }}</td>
-                                <td>{{ $row['product_name'] }}</td>
+                                <td><a href="#" wire:click.prevent="showProductDetails({{ $row['contract_id'] }}, {{ $row['detail_id'] }})">{{ $row['product_cod'] }}</a></td>
+                                <td><a href="#" wire:click.prevent="showProductDetails({{ $row['contract_id'] }}, {{ $row['detail_id'] }})">{{ $row['product_name'] }}</a></td>
 
                                 <td class="text-right">
                                     {{ number_format($row['requested']) }}
@@ -385,7 +426,7 @@
 
                                 <td>
                                     @if ($row['priority'] !== null && $row['priority'] !== '')
-                                        {{ $row['priority'] }}
+                            {{ $row['priority']->label() }}
                                     @else
                                         —
                                     @endif
@@ -398,12 +439,12 @@
                                 </td>
 
                                 <td>
-                                    {{ $row['delivery_date'] ? \Carbon\Carbon::parse($row['delivery_date'])->format('d/m/Y') : '—' }}
+                                    {{ $row['delivery_date'] ? $row['delivery_date'] : '—' }}
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="12" class="text-center text-muted">
+                                <td colspan="13" class="text-center text-muted">
                                     No se encontraron registros de producción.
                                 </td>
                             </tr>
@@ -413,7 +454,7 @@
                     @if ($filteredProductionRows->isNotEmpty())
                         <tfoot>
                             <tr class="font-weight-bold">
-                                <td colspan="5">Totales mostrados</td>
+                                <td colspan="6">Totales mostrados</td>
 
                                 <td class="text-right">
                                     {{ number_format($filteredProductionRows->sum('requested')) }}
@@ -491,6 +532,24 @@
                             <th class="text-right">Faltante</th>
                             <th style="min-width: 150px;">Avance</th>
                         </tr>
+                        <tr class="bg-light">
+                            @foreach ([
+                                'industry_id' => 'Para área',
+                                'industry_name' => 'Área final',
+                                'product_cod' => 'Código',
+                                'product_name' => 'Producto',
+                                'contracts' => 'Contratos',
+                                'requested' => 'Solicitado',
+                                'produced' => 'Fabricado',
+                                'delivered' => 'Entregado',
+                                'pending' => 'Faltante',
+                                'progress' => 'Progreso',
+                            ] as $key => $placeholder)
+                                <th><input type="search" class="form-control form-control-sm"
+                                    placeholder="Filtrar {{ $placeholder }}"
+                                    wire:model.live.debounce.300ms="industryColumnFilters.{{ $key }}"></th>
+                            @endforeach
+                        </tr>
                     </thead>
 
                     <tbody>
@@ -504,8 +563,8 @@
                                     {{ $row['industry_name'] }}
                                 </td>
 
-                                <td>{{ $row['product_cod'] }}</td>
-                                <td>{{ $row['product_name'] }}</td>
+                                <td><a href="#" wire:click.prevent="showProductDetails({{ $row['contract_id'] }}, {{ $row['detail_id'] }})">{{ $row['product_cod'] }}</a></td>
+                                <td><a href="#" wire:click.prevent="showProductDetails({{ $row['contract_id'] }}, {{ $row['detail_id'] }})">{{ $row['product_name'] }}</a></td>
 
                                 <td class="text-center">
                                     {{ number_format($row['contracts']) }}
@@ -737,6 +796,24 @@
                             <th>Prioridad</th>
                             <th>Estado</th>
                         </tr>
+                        <tr class="bg-light">
+                            @foreach ([
+                                'contract_id' => 'ID contrato',
+                                'external_id' => 'Proforma externa',
+                                'customer' => 'Cliente',
+                                'created_at' => 'Creación',
+                                'delivery_date' => 'Entrega',
+                                'products' => 'Productos',
+                                'units' => 'Unidades',
+                                'amount' => 'Importe',
+                                'priority' => 'Prioridad',
+                                'status_label' => 'Estado',
+                            ] as $key => $placeholder)
+                                <th><input type="search" class="form-control form-control-sm"
+                                    placeholder="Filtrar {{ $placeholder }}"
+                                    wire:model.live.debounce.300ms="contractsColumnFilters.{{ $key }}"></th>
+                            @endforeach
+                        </tr>
                     </thead>
 
                     <tbody>
@@ -769,11 +846,12 @@
                                 <td>
                                     @forelse ($contract->details as $detail)
                                         <div class="mb-1">
-                                            <span class="badge badge-light">
-                                                {{ $detail->product?->cod ?? '—' }}
-                                            </span>
-
-                                            {{ $detail->product?->name ?? 'Producto eliminado' }}
+                                            <a href="#" wire:click.prevent="showProductDetails({{ $contract->id }}, {{ $detail->id }})">
+                                                <span class="badge badge-primary">{{ $detail->product?->cod ?? '—' }}</span>
+                                            </a>
+                                            <a href="#" wire:click.prevent="showProductDetails({{ $contract->id }}, {{ $detail->id }})">
+                                                {{ $detail->product?->name ?? 'Producto eliminado' }}
+                                            </a>
                                             <small class="text-muted">
                                                 ({{ number_format($detail->quantity) }})
                                             </small>
@@ -801,7 +879,7 @@
                                 </td>
 
                                 <td>
-                                    {{ $contract->priority ?? '—' }}
+                                        {{ $contract->priority->label() ?? '—' }}
                                 </td>
 
                                 <td>
@@ -888,4 +966,47 @@
             </div>
         </div>
     </div>
+
+
+    {{-- Popup con los datos del producto y las etiquetas de DetailContract --}}
+    @if ($productPopup)
+        <div class="position-fixed w-100 h-100 d-flex align-items-center justify-content-center"
+            style="inset:0; z-index:1050; background:rgba(0,0,0,.55); padding:1rem;"
+            wire:click.self="closeProductDetails">
+            <div class="card card-primary card-outline shadow-lg" style="width:100%; max-width:650px; max-height:90vh; overflow:auto;">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-box-open mr-2"></i>Detalle del producto en la orden #{{ $productPopup['contract_id'] }}</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" wire:click="closeProductDetails" aria-label="Cerrar">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-3">
+                        <dt class="col-sm-4">ID de orden</dt><dd class="col-sm-8">#{{ $productPopup['contract_id'] }}</dd>
+                        <dt class="col-sm-4">ID externo</dt><dd class="col-sm-8">{{ filled($productPopup['external_id']) ? $productPopup['external_id'] : '—' }}</dd>
+                        <dt class="col-sm-4">ID DetailContract</dt><dd class="col-sm-8">{{ $productPopup['detail_id'] }}</dd>
+                        <dt class="col-sm-4">ID producto</dt><dd class="col-sm-8">{{ $productPopup['product_id'] }}</dd>
+                        <dt class="col-sm-4">Código</dt><dd class="col-sm-8">{{ $productPopup['cod'] }}</dd>
+                        <dt class="col-sm-4">Producto</dt><dd class="col-sm-8">{{ $productPopup['name'] }}</dd>
+                        <dt class="col-sm-4">Cantidad solicitada</dt><dd class="col-sm-8">{{ number_format($productPopup['quantity']) }}</dd>
+                        <dt class="col-sm-4">Precio unitario</dt><dd class="col-sm-8">{{ number_format($productPopup['price'], 2) }}</dd>
+                    </dl>
+                    <h5><i class="fas fa-tags mr-1"></i>Datos (etiquetas del DetailContract)</h5>
+                    @forelse ($productPopup['tags'] as $tag)
+                        <div class="d-flex justify-content-between border rounded p-2 mb-2">
+                            <strong>{{ $tag['name'] }}</strong>
+                            <span>{{ $tag['value'] }}</span>
+                        </div>
+                    @empty
+                        <p class="text-muted mb-0">Este producto no tiene datos/etiquetas personalizados en esta orden.</p>
+                    @endforelse
+                </div>
+                <div class="card-footer text-right">
+                    <button type="button" class="btn btn-secondary" wire:click="closeProductDetails">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>

@@ -53,6 +53,7 @@ new class extends Component
             'N°' => 'id',
             'Nombre' => 'name',
             'Tipo de Area' => null,
+            'Area/Sucursal' => 'type',
             'Dirección' => 'address',
             'Teléfono' => 'phone',
             'Acciones' => null,

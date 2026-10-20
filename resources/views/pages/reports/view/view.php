@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Enums\Priority;
 use App\Enums\Status;
 use App\Models\Assembly;
 use App\Models\BuildIndustry;
@@ -25,6 +26,63 @@ new class extends Component
     public string $searchIndustry = '';
     public string $searchContracts = '';
 
+    // Filtros por columna de cada tabla
+    public array $orderedColumnFilters = [];
+    public array $productionColumnFilters = [];
+    public array $industryColumnFilters = [];
+    public array $contractsColumnFilters = [];
+
+    // Detalle del producto/DetailContract mostrado en el popup
+    public ?array $productPopup = null;
+
+    public function showProductDetails(int $contractId, int $detailId): void
+    {
+        $contract = Contract::query()
+            ->with(['details.product', 'details.tags'])
+            ->findOrFail($contractId);
+
+        $detail = $contract->details->firstWhere('id', $detailId);
+
+        abort_unless($detail, 404);
+
+        $this->productPopup = [
+            'contract_id' => $contract->id,
+            'external_id' => $contract->external_id,
+            'detail_id' => $detail->id,
+            'product_id' => $detail->product_id,
+            'cod' => $detail->product?->cod ?? '—',
+            'name' => $detail->product?->name ?? 'Producto eliminado',
+            'quantity' => (float) $detail->quantity,
+            'price' => (float) $detail->price,
+            'tags' => $detail->tags->map(fn ($tag) => [
+                'name' => $tag->name,
+                'value' => $tag->value,
+            ])->values()->all(),
+        ];
+    }
+
+    public function closeProductDetails(): void
+    {
+        $this->productPopup = null;
+    }
+
+    private function matchesColumnFilters(array $row, array $filters): bool
+    {
+        foreach ($filters as $key => $value) {
+            $value = trim((string) $value);
+
+            if ($value === '') {
+                continue;
+            }
+
+            if (!$this->containsSearch($row[$key] ?? '', $value)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public function clearFilters(): void
     {
         $this->reset([
@@ -36,6 +94,11 @@ new class extends Component
             'searchProduction',
             'searchIndustry',
             'searchContracts',
+            'orderedColumnFilters',
+            'productionColumnFilters',
+            'industryColumnFilters',
+            'contractsColumnFilters',
+            'productPopup',
         ]);
     }
 
@@ -66,16 +129,87 @@ new class extends Component
             : 'badge-secondary';
     }
 
+    /**
+     * Búsqueda por términos dentro de un solo valor.
+     * Todos los términos deben estar presentes, sin importar el orden.
+     */
     private function containsSearch($value, string $search): bool
     {
-        if ($search === '') {
+        $terms = $this->searchTerms($search);
+
+        if ($terms === []) {
             return true;
         }
 
-        return str_contains(
-            mb_strtolower((string) $value),
-            mb_strtolower(trim($search))
+        $haystack = mb_strtolower((string) $value);
+
+        foreach ($terms as $term) {
+            if (!str_contains($haystack, $term)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /** Divide una búsqueda en palabras, ignorando espacios repetidos. */
+    private function searchTerms(string $search): array
+    {
+        $search = mb_strtolower(trim($search));
+
+        if ($search === '') {
+            return [];
+        }
+
+        return preg_split('/\s+/u', $search, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+    }
+
+    /**
+     * Búsqueda múltiple entre varios campos: cada término debe coincidir
+     * con al menos uno de los campos, pero no necesariamente con el mismo.
+     */
+    private function matchesSearchAcross(array $values, string $search): bool
+    {
+        $terms = $this->searchTerms($search);
+
+        if ($terms === []) {
+            return true;
+        }
+
+        $haystacks = array_map(
+            fn ($value) => mb_strtolower((string) $value),
+            $values
         );
+
+        foreach ($terms as $term) {
+            $found = false;
+
+            foreach ($haystacks as $haystack) {
+                if (str_contains($haystack, $term)) {
+                    $found = true;
+                    break;
+                }
+            }
+
+            if (!$found) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function priorityLabel($priority): string
+    {
+        if ($priority instanceof Priority) {
+            return $priority->label();
+        }
+
+        if (is_numeric($priority)) {
+            return Priority::tryFrom((int) $priority)?->label() ?? (string) $priority;
+        }
+
+        return (string) ($priority ?? '');
     }
 
     /**
@@ -89,26 +223,37 @@ new class extends Component
             ->with([
                 'customer',
                 'details.product',
+                'details.tags',
                 'assemblies.product',
                 'assemblies.industry',
             ])
-            ->when($this->search !== '', function ($query) {
-                $search = trim($this->search);
+            ->when($this->searchTerms($this->search) !== [], function ($query) {
+                $terms = $this->searchTerms($this->search);
 
-                $query->where(function ($q) use ($search) {
-                    $q->where('id', 'like', "%{$search}%")
-                        ->orWhere('destination','like',"%{$search}%")
-                        ->orWhere('external_id', 'like', "%{$search}%")
-                        ->orWhereHas('customer', function ($customer) use ($search) {
-                            $customer->where('name', 'like', "%{$search}%")
-                                ->orWhere('organization', 'like', "%{$search}%")
-                                ->orWhere('ci_nit', 'like', "%{$search}%");
-                        })
-                        ->orWhereHas('details.product', function ($product) use ($search) {
-                            $product->where('name', 'like', "%{$search}%")
-                                ->orWhere('cod', 'like', "%{$search}%");
-                        });
-                });
+                // Cada palabra debe encontrarse en algún campo del contrato,
+                // cliente, producto o datos personalizados del detalle.
+                foreach ($terms as $term) {
+                    $like = "%{$term}%";
+
+                    $query->where(function ($q) use ($like) {
+                        $q->where('id', 'like', $like)
+                            ->orWhere('destination', 'like', $like)
+                            ->orWhere('external_id', 'like', $like)
+                            ->orWhereHas('customer', function ($customer) use ($like) {
+                                $customer->where('name', 'like', $like)
+                                    ->orWhere('organization', 'like', $like)
+                                    ->orWhere('ci_nit', 'like', $like);
+                            })
+                            ->orWhereHas('details.product', function ($product) use ($like) {
+                                $product->where('name', 'like', $like)
+                                    ->orWhere('cod', 'like', $like);
+                            })
+                            ->orWhereHas('details.tags', function ($tag) use ($like) {
+                                $tag->where('name', 'like', $like)
+                                    ->orWhere('value', 'like', $like);
+                            });
+                    });
+                }
             })
             ->when(
                 $this->statusFilter !== '',
@@ -252,6 +397,8 @@ new class extends Component
 
                         'contract_id' => $contract->id,
                         'external_id' => $contract->external_id,
+                        'tags_text' => $detail->tags->map(fn ($tag) => $tag->name . ': ' . $tag->value)->implode(' | '),
+                        'detail_id' => $detail->id,
 
                         'requested' => $allocated,
                         'produced' => $assemblyProduced,
@@ -279,6 +426,8 @@ new class extends Component
 
                         'contract_id' => $contract->id,
                         'external_id' => $contract->external_id,
+                        'tags_text' => $detail->tags->map(fn ($tag) => $tag->name . ': ' . $tag->value)->implode(' | '),
+                        'detail_id' => $detail->id,
 
                         'requested' => $remainingRequested,
                         'produced' => 0,
@@ -304,6 +453,15 @@ new class extends Component
                 $productionRows->push([
                     'contract_id' => $contract->id,
                     'external_id' => $contract->external_id,
+                    'detail_id' => $detail->id,
+                    'price' => (float) $detail->price,
+                    'tags' => $detail->tags->map(fn ($tag) => [
+                        'name' => $tag->name,
+                        'value' => $tag->value,
+                    ])->values()->all(),
+                    'tags_text' => $detail->tags
+                        ->map(fn ($tag) => trim($tag->name . ': ' . $tag->value))
+                        ->implode(' | '),
 
                     'product_id' => $detail->product_id,
                     'product_name' => $detail->product?->name
@@ -326,7 +484,7 @@ new class extends Component
                     'status_label' => $this->statusLabel($productionStatus),
                     'status_badge' => $this->statusBadge($productionStatus),
 
-                    'delivery_date' => $contract->delivery_date,
+                    'delivery_date' => $contract->delivery_date ? Carbon::parse($contract->delivery_date)->format('d/m/Y') : '',
                 ]);
             }
         }
@@ -350,6 +508,7 @@ new class extends Component
                     'product_id' => $first['product_id'],
                     'name' => $first['product_name'],
                     'cod' => $first['product_cod'],
+                    'order_rows' => $rows->sortBy(['contract_id', 'detail_id'])->values(),
 
                     'orders' => $rows->count(),
                     'requested' => $requested,
@@ -389,6 +548,9 @@ new class extends Component
                     'product_id' => $first['product_id'],
                     'product_name' => $first['product_name'],
                     'product_cod' => $first['product_cod'],
+                    'tags_text' => $rows->pluck('tags_text')->filter()->implode(' | '),
+                    'contract_id' => $first['contract_id'],
+                    'detail_id' => $first['detail_id'] ?? null,
 
                     'contracts' => $rows
                         ->pluck('contract_id')
@@ -523,37 +685,95 @@ new class extends Component
         */
 
         $filteredOrderedProducts = $orderedProducts
-            ->filter(fn ($row) =>
-                $this->containsSearch($row['name'], $this->searchOrderedProducts)
-                || $this->containsSearch($row['cod'], $this->searchOrderedProducts)
-                || $this->containsSearch($row['product_id'], $this->searchOrderedProducts)
-            )
+            ->map(function ($row) {
+                $productValues = [
+                    'product_id' => $row['product_id'],
+                    'cod' => $row['cod'],
+                    'name' => $row['name'],
+                ];
+
+                if (!$this->matchesColumnFilters($productValues, array_intersect_key(
+                    $this->orderedColumnFilters,
+                    array_flip(['product_id', 'cod', 'name'])
+                ))) {
+                    return null;
+                }
+
+                $orderRows = $row['order_rows']->filter(function ($order) {
+                    $values = [
+                        'contract_id' => $order['contract_id'],
+                        'external_id' => $order['external_id'],
+                        'tags_text' => $order['tags_text'] ?? '',
+                        'requested' => $order['requested'],
+                        'price' => $order['price'] ?? 0,
+                        'produced' => $order['produced'],
+                        'delivered' => $order['delivered'],
+                        'pending' => $order['pending'],
+                        'progress' => $order['requested'] > 0
+                            ? round(($order['produced'] / $order['requested']) * 100, 1)
+                            : 0,
+                    ];
+
+                    return $this->matchesColumnFilters($values, array_intersect_key(
+                        $this->orderedColumnFilters,
+                        array_flip(['contract_id', 'external_id', 'tags_text', 'requested', 'price', 'produced', 'delivered', 'pending', 'progress'])
+                    ));
+                })->values();
+
+                if ($orderRows->isEmpty() && collect($this->orderedColumnFilters)->filter(fn ($v) => trim((string) $v) !== '')->isNotEmpty()) {
+                    return null;
+                }
+
+                $row['visible_order_rows'] = $orderRows;
+
+                // Los totales de la fila principal reflejan las subfilas visibles
+                // después de aplicar los filtros por columna.
+                $row['orders'] = $orderRows->count();
+                $row['requested'] = $orderRows->sum('requested');
+                $row['produced'] = $orderRows->sum('produced');
+                $row['delivered'] = $orderRows->sum('delivered');
+                $row['pending'] = $orderRows->sum('pending');
+                $row['progress'] = $row['requested'] > 0
+                    ? min(100, round(($row['produced'] / $row['requested']) * 100, 1))
+                    : 0;
+
+                return $row;
+            })
+            ->filter()
+            ->filter(fn ($row) => $this->matchesSearchAcross([
+                $row['name'], $row['cod'], $row['product_id'],
+                $row['order_rows']->pluck('tags_text')->implode(' '),
+                $row['order_rows']->pluck('external_id')->implode(' '),
+                $row['order_rows']->pluck('contract_id')->implode(' '),
+            ], $this->searchOrderedProducts))
             ->values();
 
         $filteredProductionRows = $productionRows
             ->filter(function ($row) {
                 $search = $this->searchProduction;
 
-                return $this->containsSearch($row['contract_id'], $search)
-                    || $this->containsSearch($row['external_id'], $search)
-                    || $this->containsSearch($row['customer'], $search)
-                    || $this->containsSearch($row['destination'], $search)
-                    || $this->containsSearch($row['product_name'], $search)
-                    || $this->containsSearch($row['product_cod'], $search)
-                    || $this->containsSearch($row['status_label'], $search)
-                    || $this->containsSearch($row['priority'], $search);
+                $matchesSearch = $this->matchesSearchAcross([
+                    $row['contract_id'], $row['external_id'], $row['customer'],
+                    $row['destination'], $row['product_name'], $row['product_cod'],
+                    $row['status_label'], $this->priorityLabel($row['priority']),
+                    $row['tags_text'] ?? '',
+                ], $search);
+
+                $columnValues = $row;
+                $columnValues['priority'] = $this->priorityLabel($row['priority'] ?? null);
+
+                return $matchesSearch && $this->matchesColumnFilters($columnValues, $this->productionColumnFilters);
             })
             ->values();
 
         $filteredIndustryRows = $industryRows
             ->filter(function ($row) {
-                $search = $this->searchIndustry;
+                $matchesSearch = $this->matchesSearchAcross([
+                    $row['industry_id'], $row['industry_name'], $row['product_id'],
+                    $row['product_name'], $row['product_cod'], $row['contract_id'],
+                ], $this->searchIndustry);
 
-                return $this->containsSearch($row['industry_id'], $search)
-                    || $this->containsSearch($row['industry_name'], $search)
-                    || $this->containsSearch($row['product_id'], $search)
-                    || $this->containsSearch($row['product_name'], $search)
-                    || $this->containsSearch($row['product_cod'], $search);
+                return $matchesSearch && $this->matchesColumnFilters($row, $this->industryColumnFilters);
             })
             ->values();
 
@@ -561,37 +781,40 @@ new class extends Component
             ->filter(function ($contract) {
                 $search = $this->searchContracts;
 
-                if ($search === '') {
-                    return true;
-                }
-
                 $customerName = $contract->customer?->name
                     ?? $contract->customer?->organization
                     ?? 'Cliente anónimo';
 
                 $statusLabel = $this->statusLabel($contract->status);
 
-                if (
-                    $this->containsSearch($contract->id, $search)
-                    || $this->containsSearch($contract->external_id, $search)
-                    || $this->containsSearch($customerName, $search)
-                    || $this->containsSearch($statusLabel, $search)
-                    || $this->containsSearch($contract->priority, $search)
-                ) {
-                    return true;
-                }
+                $matchesSearch = $this->matchesSearchAcross([
+                    $contract->id,
+                    $contract->external_id,
+                    $customerName,
+                    $statusLabel,
+                    $this->priorityLabel($contract->priority),
+                    $contract->destination,
+                    $contract->details->pluck('product.name')->implode(' '),
+                    $contract->details->pluck('product.cod')->implode(' '),
+                    $contract->details->map(fn ($detail) => $detail->tags
+                        ->map(fn ($tag) => $tag->name . ' ' . $tag->value)
+                        ->implode(' '))->implode(' '),
+                ], $search);
 
-                return $contract->details->contains(
-                    fn ($detail) =>
-                        $this->containsSearch(
-                            $detail->product?->name,
-                            $search
-                        )
-                        || $this->containsSearch(
-                            $detail->product?->cod,
-                            $search
-                        )
-                );
+                $contractValues = [
+                    'contract_id' => $contract->id,
+                    'external_id' => $contract->external_id,
+                    'customer' => $customerName,
+                    'created_at' => $contract->created_at?->format('d/m/Y'),
+                    'delivery_date' => $contract->delivery_date ? Carbon::parse($contract->delivery_date)->format('d/m/Y') : '',
+                    'products' => $contract->details->map(fn ($detail) => ($detail->product?->cod ?? '') . ' ' . ($detail->product?->name ?? ''))->implode(' '),
+                    'units' => $contract->details->sum('quantity'),
+                    'amount' => $contract->details->sum(fn ($detail) => (float) $detail->quantity * (float) $detail->price),
+                    'priority' => $this->priorityLabel($contract->priority),
+                    'status_label' => $statusLabel,
+                ];
+
+                return $matchesSearch && $this->matchesColumnFilters($contractValues, $this->contractsColumnFilters);
             })
             ->values();
 

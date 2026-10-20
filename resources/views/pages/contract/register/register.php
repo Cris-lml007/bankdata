@@ -2,10 +2,12 @@
 
 use App\Enums\TypePayment;
 use App\Enums\Status;
+use App\Enums\Type;
 use App\Models\Contract;
 use App\Models\Customer;
 use App\Models\Industry;
 use App\Models\Product;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 
@@ -43,6 +45,13 @@ new class extends Component
         'price' => '',
     ];
 
+    /**
+     * Etiquetas del producto que se está preparando para agregar.
+     *
+     * Estas etiquetas todavía no se guardan en la base de datos.
+     */
+    public $tagsDraft = [];
+
     public function mount()
     {
         $this->contract['delivery_date'] = now()->format('Y-m-d');
@@ -50,6 +59,10 @@ new class extends Component
         $this->contract['method_payment'] = TypePayment::NONE->value;
 
         $this->contract['priority'] = 5;
+
+        $this->tagsDraft = [
+            ['name' => '', 'value' => ''],
+        ];
     }
 
     public function searchCustomer()
@@ -111,7 +124,12 @@ new class extends Component
 
         $this->productSearch = $product->cod . ' - ' . $product->name;
 
-        $this->resetValidation('detail.product_id');
+        // Cada producto nuevo comienza con sus propias etiquetas.
+        $this->tagsDraft = [
+            ['name' => '', 'value' => ''],
+        ];
+
+        $this->resetValidation();
     }
 
     public function updatedProductSearch()
@@ -120,6 +138,44 @@ new class extends Component
 
         $this->detail['product_id'] = '';
         $this->detail['price'] = '';
+
+        // Evitar que las etiquetas de un producto anterior se reutilicen.
+        $this->tagsDraft = [
+            ['name' => '', 'value' => ''],
+        ];
+
+        $this->resetValidation([
+            'detail.product_id',
+            'detail.price',
+            'tagsDraft',
+        ]);
+    }
+
+    public function addTag(): void
+    {
+        $this->tagsDraft[] = [
+            'name' => '',
+            'value' => '',
+        ];
+    }
+
+    public function removeTag(int $index): void
+    {
+        if (!array_key_exists($index, $this->tagsDraft)) {
+            return;
+        }
+
+        unset($this->tagsDraft[$index]);
+
+        $this->tagsDraft = array_values($this->tagsDraft);
+
+        if (empty($this->tagsDraft)) {
+            $this->tagsDraft = [
+                ['name' => '', 'value' => ''],
+            ];
+        }
+
+        $this->resetValidation('tagsDraft');
     }
 
     public function addProduct()
@@ -128,7 +184,58 @@ new class extends Component
             'detail.product_id' => 'required|exists:products,id',
             'detail.quantity' => 'required|integer|min:1',
             'detail.price' => 'required|numeric|min:0',
+
+            'tagsDraft' => 'nullable|array',
+            'tagsDraft.*.name' => 'nullable|string|max:255',
+            'tagsDraft.*.value' => 'nullable|string|max:255',
+        ], [
+            'detail.product_id.required' => 'Selecciona un producto.',
+            'detail.product_id.exists' => 'El producto seleccionado no existe.',
+            'detail.quantity.required' => 'Ingresa la cantidad.',
+            'detail.quantity.integer' => 'La cantidad debe ser un entero.',
+            'detail.quantity.min' => 'La cantidad debe ser mayor que cero.',
+            'detail.price.required' => 'Ingresa el precio unitario.',
+            'detail.price.numeric' => 'El precio debe ser numérico.',
+            'detail.price.min' => 'El precio no puede ser negativo.',
         ]);
+
+        /*
+         * Si una etiqueta tiene nombre o valor, ambos son obligatorios.
+         * Las filas completamente vacías se ignoran.
+         */
+        $tags = [];
+
+        foreach ($this->tagsDraft as $index => $tag) {
+            $name = trim((string) ($tag['name'] ?? ''));
+            $value = trim((string) ($tag['value'] ?? ''));
+
+            if ($name === '' && $value === '') {
+                continue;
+            }
+
+            if ($name === '') {
+                $this->addError(
+                    "tagsDraft.{$index}.name",
+                    'Ingresa el nombre de la etiqueta.'
+                );
+
+                return;
+            }
+
+            if ($value === '') {
+                $this->addError(
+                    "tagsDraft.{$index}.value",
+                    'Ingresa el valor de la etiqueta.'
+                );
+
+                return;
+            }
+
+            $tags[] = [
+                'name' => $name,
+                'value' => $value,
+            ];
+        }
 
         $product = Product::findOrFail(
             $this->detail['product_id']
@@ -138,8 +245,9 @@ new class extends Component
             'product_id' => $product->id,
             'cod' => $product->cod,
             'name' => $product->name,
-            'quantity' => $this->detail['quantity'],
-            'price' => $this->detail['price'],
+            'quantity' => (int) $this->detail['quantity'],
+            'price' => (float) $this->detail['price'],
+            'tags' => $tags,
         ];
 
         $this->resetDetail();
@@ -168,13 +276,16 @@ new class extends Component
 
         $this->selectedProduct = null;
 
+        $this->tagsDraft = [
+            ['name' => '', 'value' => ''],
+        ];
+
         $this->resetValidation();
     }
 
     public function save()
     {
         $this->validate([
-            // Información del contrato
             'contract.delivery_date' => 'required|date',
 
             'contract.destination' => 'nullable|string|max:255',
@@ -187,7 +298,6 @@ new class extends Component
 
             'contract.priority' => 'required|integer|between:1,5',
 
-            // Nuevos campos
             'contract.external_id' => 'nullable|string|max:255',
 
             'contract.industry_id' => [
@@ -196,15 +306,10 @@ new class extends Component
                 'exists:industries,id',
             ],
 
-            // Información del cliente
             'customer.ci_nit' => 'nullable|string|max:255',
-
             'customer.name' => 'nullable|string|max:255',
-
             'customer.email' => 'nullable|email|max:255',
-
             'customer.phone' => 'nullable|string|max:255',
-
             'customer.organization' => 'nullable|string|max:255',
         ]);
 
@@ -217,64 +322,68 @@ new class extends Component
             return;
         }
 
-        /*
-         * Crear o actualizar el cliente.
-         * Si no tiene CI/NIT, el contrato será anónimo.
-         */
-        $customer = null;
+        DB::transaction(function () {
+            /*
+             * Crear o actualizar cliente.
+             * Sin CI/NIT, el contrato será anónimo.
+             */
+            $customer = null;
 
-        if (trim($this->customer['ci_nit']) !== '') {
-            $customer = Customer::updateOrCreate(
-                [
-                    'ci_nit' => trim($this->customer['ci_nit']),
-                ],
-                [
-                    'name' => $this->customer['name'],
-                    'email' => $this->customer['email'] ?: null,
-                    'phone' => $this->customer['phone'] ?: null,
-                    'organization' => $this->customer['organization'] ?: null,
-                ]
-            );
-        }
+            if (trim($this->customer['ci_nit']) !== '') {
+                $customer = Customer::updateOrCreate(
+                    [
+                        'ci_nit' => trim($this->customer['ci_nit']),
+                    ],
+                    [
+                        'name' => $this->customer['name'],
+                        'email' => $this->customer['email'] ?: null,
+                        'phone' => $this->customer['phone'] ?: null,
+                        'organization' => $this->customer['organization'] ?: null,
+                    ]
+                );
+            }
 
-        /*
-         * Crear contrato.
-         */
-        $contract = Contract::create([
-            'customer_id' => $customer?->id,
+            /*
+             * Crear contrato.
+             */
+            $contract = Contract::create([
+                'customer_id' => $customer?->id,
+                'delivery_date' => $this->contract['delivery_date'],
+                'destination' => $this->contract['destination'] ?: null,
+                'method_payment' => $this->contract['method_payment'],
+                'priority' => $this->contract['priority'],
 
-            'delivery_date' => $this->contract['delivery_date'],
+                'external_id' => trim(
+                    (string) $this->contract['external_id']
+                ) ?: null,
 
-            'destination' => $this->contract['destination'] ?: null,
-
-            'method_payment' => $this->contract['method_payment'],
-
-            'priority' => $this->contract['priority'],
-
-            'external_id' => trim(
-                (string) $this->contract['external_id']
-            ) ?: null,
-
-            'industry_id' => $this->contract['industry_id'] ?: null,
-
-            'status' => Status::ACTIVE,
-        ]);
-
-        /*
-         * Registrar los productos del contrato.
-         */
-        foreach ($this->products as $product) {
-            $contract->details()->create([
-                'product_id' => $product['product_id'],
-                'quantity' => $product['quantity'],
-                'price' => $product['price'],
+                'industry_id' => $this->contract['industry_id'] ?: null,
+                'status' => Status::ACTIVE,
             ]);
-        }
 
-        return $this->redirectRoute(
-            'dashboard.contracts.view',
-            $contract
-        );
+            /*
+             * Crear detalles y sus etiquetas personalizadas.
+             */
+            foreach ($this->products as $product) {
+                $detail = $contract->details()->create([
+                    'product_id' => $product['product_id'],
+                    'quantity' => $product['quantity'],
+                    'price' => $product['price'],
+                ]);
+
+                foreach ($product['tags'] ?? [] as $tag) {
+                    $detail->tags()->create([
+                        'name' => $tag['name'],
+                        'value' => $tag['value'],
+                    ]);
+                }
+            }
+
+            $this->redirectRoute(
+                'dashboard.contracts.view',
+                $contract
+            );
+        });
     }
 
     public function render()
@@ -299,8 +408,7 @@ new class extends Component
 
         return $this->view([
             'productResults' => $productResults,
-
-            'industries' => Industry::orderBy('name')->get(),
+            'industries' => Industry::where('type',Type::SUCURSAL)->orderBy('name')->get(),
         ]);
     }
 };

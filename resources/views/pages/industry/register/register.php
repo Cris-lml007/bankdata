@@ -11,6 +11,7 @@ new class extends Component
         'type_factory_id' => '',
         'address' => '',
         'phone' => '',
+        'type' => ''
     ];
 
     public function save()
@@ -26,7 +27,9 @@ new class extends Component
                 'nullable|string|max:255',
 
             'industry.phone' =>
-                'nullable|string|max:255',
+            'nullable|string|max:255',
+
+            'industry.type' => 'required'
         ]);
 
         $industry = Industry::create(

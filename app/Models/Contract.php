@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\Priority;
 use App\Enums\Status;
 use App\Enums\TypePayment;
 use Illuminate\Database\Eloquent\Model;
@@ -49,6 +50,7 @@ class Contract extends Model
         return [
             'status' => Status::class,
             'method_payment' => TypePayment::class,
+            'priority' => Priority::class
         ];
     }
 }

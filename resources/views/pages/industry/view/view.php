@@ -14,6 +14,7 @@ new class extends Component
         'type_factory_id' => '',
         'address' => '',
         'phone' => '',
+        'type' => ''
     ];
 
     public function mount(Industry $industry)
@@ -40,6 +41,7 @@ new class extends Component
             'type_factory_id' => $this->industry->type_factory_id,
             'address' => $this->industry->address ?? '',
             'phone' => $this->industry->phone ?? '',
+            'type' => $this->industry->type ?? ''
         ];
     }
 
@@ -50,6 +52,7 @@ new class extends Component
             'type_factory_id' => $this->industry->type_factory_id,
             'address' => $this->industry->address ?? '',
             'phone' => $this->industry->phone ?? '',
+            'type' => $this->industry->type ?? ''
         ];
 
         $this->editingIndustry = true;
@@ -59,16 +62,18 @@ new class extends Component
     {
         $this->validate([
             'industryData.name' =>
-                'required|string|max:255',
+            'required|string|max:255',
 
             'industryData.type_factory_id' =>
-                'required|exists:type_factories,id',
+            'required|exists:type_factories,id',
 
             'industryData.address' =>
-                'nullable|string|max:255',
+            'nullable|string|max:255',
 
             'industryData.phone' =>
-                'nullable|string|max:255',
+            'nullable|string|max:255',
+
+            'industryData.type' => 'required'
         ]);
 
         $this->industry->update(

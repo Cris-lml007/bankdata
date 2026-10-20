@@ -22,4 +22,8 @@ class DetailContract extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    public function tags(){
+        return $this->morphMany(TagProduct::class,'itemable');
+    }
 }

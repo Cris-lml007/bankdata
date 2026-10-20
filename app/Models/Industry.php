@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\Type;
 use Illuminate\Database\Eloquent\Model;
 
 class Industry extends Model
@@ -11,6 +12,7 @@ class Industry extends Model
         'type_factory_id',
         'address',
         'phone',
+        'type'
     ];
 
     public function typeFactory()
@@ -35,5 +37,11 @@ class Industry extends Model
 
     public function users() {
         return $this->hasMany(User::class);
+    }
+
+    protected function casts(): array{
+        return [
+            'type' => Type::class
+        ];
     }
 }

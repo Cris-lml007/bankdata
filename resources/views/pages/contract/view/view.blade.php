@@ -983,7 +983,61 @@
                                 </td>
 
                                 <td>
-                                    {{ $item['name'] }}
+                                    <strong>{{ $item['name'] }}</strong>
+
+                                    @if ($editingContract)
+                                        <div class="mt-2">
+                                            <small class="text-muted d-block mb-1">
+                                                <i class="fas fa-tags"></i> Etiquetas personalizadas
+                                            </small>
+
+                                            @foreach (($item['tags'] ?? []) as $tagIndex => $tag)
+                                                <div class="row mb-1" wire:key="product-{{ $index }}-tag-{{ $tagIndex }}">
+                                                    <div class="col-5">
+                                                        <input type="text"
+                                                            wire:model="products.{{ $index }}.tags.{{ $tagIndex }}.name"
+                                                            class="form-control form-control-sm"
+                                                            placeholder="Nombre">
+                                                    </div>
+                                                    <div class="col-5">
+                                                        <input type="text"
+                                                            wire:model="products.{{ $index }}.tags.{{ $tagIndex }}.value"
+                                                            class="form-control form-control-sm"
+                                                            placeholder="Valor">
+                                                    </div>
+                                                    <div class="col-2">
+                                                        <button type="button"
+                                                            wire:click="removeProductTag({{ $index }}, {{ $tagIndex }})"
+                                                            class="btn btn-danger btn-sm"
+                                                            title="Eliminar etiqueta">
+                                                            <i class="fas fa-times"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+
+                                            <button type="button" wire:click="addProductTag({{ $index }})"
+                                                class="btn btn-outline-primary btn-xs mt-1">
+                                                <i class="fas fa-plus"></i> Añadir etiqueta
+                                            </button>
+
+                                            @error("products.$index.tags")
+                                                <small class="text-danger d-block">{{ $message }}</small>
+                                            @enderror
+                                        </div>
+                                    @else
+                                        @if (!empty($item['tags']))
+                                            <div class="mt-2">
+                                                @foreach ($item['tags'] as $tag)
+                                                    <span class="badge badge-info mr-1 mb-1">
+                                                        {{ $tag['name'] }}: {{ $tag['value'] }}
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                        @else
+                                            <small class="text-muted d-block mt-1">Sin etiquetas</small>
+                                        @endif
+                                    @endif
                                 </td>
 
                                 @if ($editingContract)
@@ -1234,6 +1288,60 @@
                         </div>
 
                     </div>
+
+                    {{-- Etiquetas personalizadas para el nuevo producto --}}
+                    @if ($selectedProduct)
+                        <div class="card card-outline card-info mt-3 mb-0">
+                            <div class="card-header">
+                                <h3 class="card-title">
+                                    <i class="fas fa-tags"></i>
+                                    Etiquetas personalizadas del producto
+                                </h3>
+                            </div>
+
+                            <div class="card-body">
+                                <p class="text-muted">
+                                    Estas etiquetas se guardarán únicamente en este detalle de la orden.
+                                </p>
+
+                                @foreach ($tagsDraft as $tagIndex => $tag)
+                                    <div class="row align-items-center mb-2"
+                                        wire:key="draft-tag-{{ $tagIndex }}">
+                                        <div class="col-md-5">
+                                            <input type="text"
+                                                wire:model="tagsDraft.{{ $tagIndex }}.name"
+                                                class="form-control"
+                                                placeholder="Nombre de la etiqueta">
+                                        </div>
+                                        <div class="col-md-5">
+                                            <input type="text"
+                                                wire:model="tagsDraft.{{ $tagIndex }}.value"
+                                                class="form-control"
+                                                placeholder="Valor de la etiqueta">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <button type="button"
+                                                wire:click="removeTagDraft({{ $tagIndex }})"
+                                                class="btn btn-outline-danger"
+                                                title="Eliminar etiqueta">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                @endforeach
+
+                                @error('tagsDraft')
+                                    <div class="text-danger mb-2">{{ $message }}</div>
+                                @enderror
+
+                                <button type="button" wire:click="addTagDraft"
+                                    class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-plus"></i>
+                                    Añadir etiqueta
+                                </button>
+                            </div>
+                        </div>
+                    @endif
 
                 </div>
 

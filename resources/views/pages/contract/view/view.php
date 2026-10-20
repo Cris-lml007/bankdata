@@ -40,6 +40,8 @@ new class extends Component
 
     public $selectedProduct = null;
 
+    public $tagsDraft = [['name' => '', 'value' => '']];
+
     public $detail = [
         'product_id' => '',
         'quantity' => 1,
@@ -87,6 +89,7 @@ new class extends Component
     {
         $this->contract->load([
             'details.product',
+            'details.tags',
             'assemblies.product',
             'assemblies.industry',
             'assemblies.components.component',
@@ -443,6 +446,7 @@ new class extends Component
             'customer',
             'quotation',
             'details.product',
+            'details.tags',
             'assemblies.product',
             'assemblies.industry',
             'assemblies.components.component',
@@ -526,6 +530,14 @@ new class extends Component
 
                     'price' =>
                         $detail->price,
+
+                    'tags' => $detail->tags
+                        ->map(fn ($tag) => [
+                            'name' => $tag->name,
+                            'value' => $tag->value,
+                        ])
+                        ->values()
+                        ->all(),
                 ];
             })
             ->toArray();
@@ -675,8 +687,24 @@ new class extends Component
 
             'products.*.price' =>
                 'required|numeric|min:0',
+
+            'products.*.tags' => 'nullable|array',
+            'products.*.tags.*.name' => 'nullable|string|max:255',
+            'products.*.tags.*.value' => 'nullable|string|max:1000',
         ]);
 
+
+        foreach ($this->products as $index => $product) {
+            foreach (($product['tags'] ?? []) as $tag) {
+                $name = trim((string) ($tag['name'] ?? ''));
+                $value = trim((string) ($tag['value'] ?? ''));
+
+                if (($name !== '' && $value === '') || ($name === '' && $value !== '')) {
+                    $this->addError("products.{$index}.tags", 'Cada etiqueta debe tener nombre y valor.');
+                    return;
+                }
+            }
+        }
 
         if (empty($this->products)) {
 
@@ -799,6 +827,8 @@ new class extends Component
                         $product['price'],
                 ]);
 
+                $this->syncDetailTags($detail, $product['tags'] ?? []);
+
                 $detailIds[] =
                     $detail->id;
 
@@ -818,6 +848,8 @@ new class extends Component
                             'price' =>
                                 $product['price'],
                         ]);
+
+                $this->syncDetailTags($detail, $product['tags'] ?? []);
 
                 $detailIds[] =
                     $detail->id;
@@ -948,82 +980,121 @@ new class extends Component
 
     public function selectProduct($id)
     {
-        $product =
-            Product::findOrFail($id);
+        $product = Product::findOrFail($id);
 
-        $this->selectedProduct =
-            $product;
+        $this->selectedProduct = $product;
+        $this->detail['product_id'] = $product->id;
+        $this->detail['price'] = '';
+        $this->tagsDraft = [['name' => '', 'value' => '']];
+        $this->productSearch = $product->cod . ' - ' . $product->name;
 
-        $this->detail['product_id'] =
-            $product->id;
-
-        $this->detail['price'] =
-            '';
-
-        $this->productSearch =
-            $product->cod
-            . ' - '
-            . $product->name;
-
-        $this->resetValidation(
-            'detail.product_id'
-        );
+        $this->resetValidation('detail.product_id');
     }
 
 
     public function updatedProductSearch()
     {
-        $this->selectedProduct =
-            null;
+        $this->selectedProduct = null;
+        $this->detail['product_id'] = '';
+        $this->detail['price'] = '';
+        $this->tagsDraft = [['name' => '', 'value' => '']];
+    }
 
-        $this->detail['product_id'] =
-            '';
 
-        $this->detail['price'] =
-            '';
+    public function addTagDraft()
+    {
+        $this->tagsDraft[] = ['name' => '', 'value' => ''];
+    }
+
+
+    public function removeTagDraft($index)
+    {
+        unset($this->tagsDraft[$index]);
+        $this->tagsDraft = array_values($this->tagsDraft);
+
+        if (empty($this->tagsDraft)) {
+            $this->tagsDraft = [['name' => '', 'value' => '']];
+        }
+    }
+
+
+    public function addProductTag($productIndex)
+    {
+        if (!isset($this->products[$productIndex])) {
+            return;
+        }
+
+        $this->products[$productIndex]['tags'] ??= [];
+        $this->products[$productIndex]['tags'][] = ['name' => '', 'value' => ''];
+    }
+
+
+    public function removeProductTag($productIndex, $tagIndex)
+    {
+        if (!isset($this->products[$productIndex]['tags'][$tagIndex])) {
+            return;
+        }
+
+        unset($this->products[$productIndex]['tags'][$tagIndex]);
+        $this->products[$productIndex]['tags'] = array_values($this->products[$productIndex]['tags']);
+    }
+
+
+    private function normalizeTags(array $tags): array
+    {
+        return collect($tags)
+            ->map(fn ($tag) => [
+                'name' => trim((string) ($tag['name'] ?? '')),
+                'value' => trim((string) ($tag['value'] ?? '')),
+            ])
+            ->filter(fn ($tag) => $tag['name'] !== '' && $tag['value'] !== '')
+            ->values()
+            ->all();
+    }
+
+
+    private function syncDetailTags($detail, array $tags): void
+    {
+        $detail->tags()->delete();
+
+        foreach ($this->normalizeTags($tags) as $tag) {
+            $detail->tags()->create($tag);
+        }
     }
 
 
     public function addProduct()
     {
         $this->validate([
-            'detail.product_id' =>
-                'required|exists:products,id',
-
-            'detail.quantity' =>
-                'required|integer|min:1',
-
-            'detail.price' =>
-                'required|numeric|min:0',
+            'detail.product_id' => 'required|exists:products,id',
+            'detail.quantity' => 'required|integer|min:1',
+            'detail.price' => 'required|numeric|min:0',
+            'tagsDraft' => 'nullable|array',
+            'tagsDraft.*.name' => 'nullable|string|max:255',
+            'tagsDraft.*.value' => 'nullable|string|max:1000',
         ]);
 
+        foreach ($this->tagsDraft as $tag) {
+            $name = trim((string) ($tag['name'] ?? ''));
+            $value = trim((string) ($tag['value'] ?? ''));
 
-        $product =
-            Product::findOrFail(
-                $this->detail['product_id']
-            );
+            if (($name !== '' && $value === '') || ($name === '' && $value !== '')) {
+                $this->addError('tagsDraft', 'Cada etiqueta debe tener nombre y valor.');
+                return;
+            }
+        }
 
+        $product = Product::findOrFail($this->detail['product_id']);
 
         $this->products[] = [
-
             'id' => null,
-
-            'product_id' =>
-                $product->id,
-
-            'cod' =>
-                $product->cod,
-
-            'name' =>
-                $product->name,
-
-            'quantity' =>
-                $this->detail['quantity'],
-
-            'price' =>
-                $this->detail['price'],
+            'product_id' => $product->id,
+            'cod' => $product->cod,
+            'name' => $product->name,
+            'quantity' => $this->detail['quantity'],
+            'price' => $this->detail['price'],
+            'tags' => $this->normalizeTags($this->tagsDraft),
         ];
-
 
         $this->resetDetail();
     }
@@ -1031,14 +1102,8 @@ new class extends Component
 
     public function removeProduct($index)
     {
-        unset(
-            $this->products[$index]
-        );
-
-        $this->products =
-            array_values(
-                $this->products
-            );
+        unset($this->products[$index]);
+        $this->products = array_values($this->products);
     }
 
 
@@ -1051,8 +1116,9 @@ new class extends Component
         ];
 
         $this->productSearch = '';
-
         $this->selectedProduct = null;
+        $this->tagsDraft = [['name' => '', 'value' => '']];
+        $this->resetValidation('tagsDraft');
     }
 
 

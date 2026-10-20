@@ -3,7 +3,6 @@
 </x-slot>
 
 <div>
-
     {{-- Información del cliente --}}
     <div class="card">
         <div class="card-header">
@@ -15,7 +14,6 @@
 
         <div class="card-body">
             <div class="row">
-
                 {{-- CI / NIT --}}
                 <div class="col-md-5">
                     <div class="form-group">
@@ -42,9 +40,7 @@
                         </div>
 
                         @error('customer.ci_nit')
-                            <span class="invalid-feedback d-block">
-                                {{ $message }}
-                            </span>
+                            <span class="invalid-feedback d-block">{{ $message }}</span>
                         @enderror
 
                         <div style="height: 21px;">
@@ -81,17 +77,13 @@
                         >
 
                         @error('customer.name')
-                            <span class="invalid-feedback d-block">
-                                {{ $message }}
-                            </span>
+                            <span class="invalid-feedback d-block">{{ $message }}</span>
                         @enderror
                     </div>
                 </div>
-
             </div>
 
             <div class="row">
-
                 {{-- Organización --}}
                 <div class="col-md-5">
                     <div class="form-group">
@@ -105,9 +97,7 @@
                         >
 
                         @error('customer.organization')
-                            <span class="invalid-feedback d-block">
-                                {{ $message }}
-                            </span>
+                            <span class="invalid-feedback d-block">{{ $message }}</span>
                         @enderror
                     </div>
                 </div>
@@ -125,9 +115,7 @@
                         >
 
                         @error('customer.email')
-                            <span class="invalid-feedback d-block">
-                                {{ $message }}
-                            </span>
+                            <span class="invalid-feedback d-block">{{ $message }}</span>
                         @enderror
                     </div>
                 </div>
@@ -145,19 +133,15 @@
                         >
 
                         @error('customer.phone')
-                            <span class="invalid-feedback d-block">
-                                {{ $message }}
-                            </span>
+                            <span class="invalid-feedback d-block">{{ $message }}</span>
                         @enderror
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
 
-
-    {{-- Información del contrato --}}
+    {{-- Información de la orden --}}
     <div class="card">
         <div class="card-header">
             <h3 class="card-title">
@@ -167,9 +151,7 @@
         </div>
 
         <div class="card-body">
-
             <div class="row">
-
                 {{-- Fecha de entrega --}}
                 <div class="col-md-4">
                     <div class="form-group">
@@ -182,9 +164,7 @@
                         >
 
                         @error('contract.delivery_date')
-                            <span class="invalid-feedback d-block">
-                                {{ $message }}
-                            </span>
+                            <span class="invalid-feedback d-block">{{ $message }}</span>
                         @enderror
                     </div>
                 </div>
@@ -202,9 +182,7 @@
                         >
 
                         @error('contract.destination')
-                            <span class="invalid-feedback d-block">
-                                {{ $message }}
-                            </span>
+                            <span class="invalid-feedback d-block">{{ $message }}</span>
                         @enderror
                     </div>
                 </div>
@@ -226,17 +204,13 @@
                         </select>
 
                         @error('contract.method_payment')
-                            <span class="invalid-feedback d-block">
-                                {{ $message }}
-                            </span>
+                            <span class="invalid-feedback d-block">{{ $message }}</span>
                         @enderror
                     </div>
                 </div>
-
             </div>
 
             <div class="row">
-
                 {{-- Prioridad --}}
                 <div class="col-md-4">
                     <div class="form-group">
@@ -254,14 +228,12 @@
                         </select>
 
                         @error('contract.priority')
-                            <span class="invalid-feedback d-block">
-                                {{ $message }}
-                            </span>
+                            <span class="invalid-feedback d-block">{{ $message }}</span>
                         @enderror
                     </div>
                 </div>
 
-                {{-- ID de proforma externa --}}
+                {{-- Proforma externa --}}
                 <div class="col-md-4">
                     <div class="form-group">
                         <label>ID de proforma externa</label>
@@ -278,25 +250,21 @@
                         </small>
 
                         @error('contract.external_id')
-                            <span class="invalid-feedback d-block">
-                                {{ $message }}
-                            </span>
+                            <span class="invalid-feedback d-block">{{ $message }}</span>
                         @enderror
                     </div>
                 </div>
 
-                {{-- Área o sucursal --}}
+                {{-- Área / sucursal --}}
                 <div class="col-md-4">
                     <div class="form-group">
-                        <label>Área / Sucursal</label>
+                        <label>Sucursal</label>
 
                         <select
                             wire:model="contract.industry_id"
                             class="form-control @error('contract.industry_id') is-invalid @enderror"
                         >
-                            <option value="">
-                                Seleccione un área o sucursal
-                            </option>
+                            <option value="">Seleccione un área o sucursal</option>
 
                             @foreach ($industries as $industry)
                                 <option value="{{ $industry->id }}">
@@ -306,22 +274,17 @@
                         </select>
 
                         <small class="form-text text-muted">
-                            Permite identificar la sucursal responsable
-                            de la orden.
+                            Permite identificar la sucursal responsable de la orden.
                         </small>
 
                         @error('contract.industry_id')
-                            <span class="invalid-feedback d-block">
-                                {{ $message }}
-                            </span>
+                            <span class="invalid-feedback d-block">{{ $message }}</span>
                         @enderror
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
-
 
     {{-- Agregar producto --}}
     <div class="card">
@@ -334,7 +297,6 @@
 
         <div class="card-body">
             <div class="row">
-
                 {{-- Producto --}}
                 <div class="col-md-5">
                     <div class="form-group position-relative">
@@ -356,14 +318,12 @@
                                 @foreach ($productResults as $product)
                                     <button
                                         type="button"
+                                        wire:key="product-result-{{ $product->id }}"
                                         wire:click="selectProduct({{ $product->id }})"
                                         class="list-group-item list-group-item-action text-left"
                                     >
                                         <strong>{{ $product->cod }}</strong>
-
-                                        <span class="ml-2">
-                                            {{ $product->name }}
-                                        </span>
+                                        <span class="ml-2">{{ $product->name }}</span>
                                     </button>
                                 @endforeach
                             </div>
@@ -373,17 +333,13 @@
                             @if ($selectedProduct)
                                 <small class="text-muted">
                                     Producto:
-                                    <strong>
-                                        {{ $selectedProduct->cod }}
-                                    </strong>
+                                    <strong>{{ $selectedProduct->cod }}</strong>
                                 </small>
                             @endif
                         </div>
 
                         @error('detail.product_id')
-                            <span class="invalid-feedback d-block">
-                                {{ $message }}
-                            </span>
+                            <span class="invalid-feedback d-block">{{ $message }}</span>
                         @enderror
                     </div>
                 </div>
@@ -396,6 +352,7 @@
                         <input
                             type="number"
                             min="1"
+                            step="1"
                             wire:model="detail.quantity"
                             class="form-control @error('detail.quantity') is-invalid @enderror"
                         >
@@ -403,9 +360,7 @@
                         <div style="height: 21px;"></div>
 
                         @error('detail.quantity')
-                            <span class="invalid-feedback d-block">
-                                {{ $message }}
-                            </span>
+                            <span class="invalid-feedback d-block">{{ $message }}</span>
                         @enderror
                     </div>
                 </div>
@@ -438,14 +393,12 @@
                         </div>
 
                         @error('detail.price')
-                            <span class="invalid-feedback d-block">
-                                {{ $message }}
-                            </span>
+                            <span class="invalid-feedback d-block">{{ $message }}</span>
                         @enderror
                     </div>
                 </div>
 
-                {{-- Botón --}}
+                {{-- Agregar --}}
                 <div class="col-md-2">
                     <div class="form-group">
                         <label>&nbsp;</label>
@@ -462,39 +415,129 @@
                         <div style="height: 21px;"></div>
                     </div>
                 </div>
+            </div>
 
+            {{-- Etiquetas personalizadas del detalle --}}
+            <div class="card card-outline card-info mt-2">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-tags mr-1"></i>
+                        Etiquetas personalizadas del producto
+                    </h3>
+                </div>
+
+                <div class="card-body">
+                    @if (!$selectedProduct)
+                        <div class="text-muted">
+                            Selecciona un producto para añadir sus etiquetas.
+                        </div>
+                    @else
+                        <div class="alert alert-light border py-2">
+                            <strong>{{ $selectedProduct->cod }}</strong>
+                            — {{ $selectedProduct->name }}
+
+                            <div class="small text-muted">
+                                Estas etiquetas pertenecerán solamente a este
+                                producto dentro de esta orden.
+                            </div>
+                        </div>
+
+                        @foreach ($tagsDraft as $index => $tag)
+                            <div
+                                class="row align-items-start mb-2"
+                                wire:key="draft-tag-{{ $index }}"
+                            >
+                                <div class="col-md-5">
+                                    <div class="form-group mb-1">
+                                        <label>Nombre de etiqueta</label>
+
+                                        <input
+                                            type="text"
+                                            wire:model="tagsDraft.{{ $index }}.name"
+                                            class="form-control @error('tagsDraft.' . $index . '.name') is-invalid @enderror"
+                                            placeholder="Ej. Color, Material, Acabado"
+                                        >
+
+                                        @error('tagsDraft.' . $index . '.name')
+                                            <span class="invalid-feedback d-block">
+                                                {{ $message }}
+                                            </span>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <div class="col-md-5">
+                                    <div class="form-group mb-1">
+                                        <label>Valor</label>
+
+                                        <input
+                                            type="text"
+                                            wire:model="tagsDraft.{{ $index }}.value"
+                                            class="form-control @error('tagsDraft.' . $index . '.value') is-invalid @enderror"
+                                            placeholder="Ej. Negro, Acero, Mate"
+                                        >
+
+                                        @error('tagsDraft.' . $index . '.value')
+                                            <span class="invalid-feedback d-block">
+                                                {{ $message }}
+                                            </span>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <div class="col-md-2">
+                                    <label>&nbsp;</label>
+
+                                    <button
+                                        type="button"
+                                        wire:click="removeTag({{ $index }})"
+                                        class="btn btn-outline-danger btn-block"
+                                        title="Eliminar etiqueta"
+                                    >
+                                        <i class="fas fa-trash"></i>
+                                        Eliminar
+                                    </button>
+                                </div>
+                            </div>
+                        @endforeach
+
+                        <button
+                            type="button"
+                            wire:click="addTag"
+                            class="btn btn-outline-info btn-sm mt-2"
+                        >
+                            <i class="fas fa-plus mr-1"></i>
+                            Añadir etiqueta
+                        </button>
+                    @endif
+                </div>
             </div>
         </div>
     </div>
 
-
-    {{-- Productos --}}
+    {{-- Resumen de productos --}}
     <div class="card">
         <div class="card-header">
             <h3 class="card-title">
                 <i class="fa fa-box"></i>
-                Productos
+                Productos de la orden
             </h3>
         </div>
 
         <div class="card-body p-0">
-
             @error('products')
-                <div class="alert alert-danger m-3">
-                    {{ $message }}
-                </div>
+                <div class="alert alert-danger m-3">{{ $message }}</div>
             @enderror
 
             <div class="table-responsive">
                 <table class="table table-bordered table-hover mb-0">
-
                     <thead>
                         <tr>
                             <th>Código</th>
-                            <th>Producto</th>
-                            <th width="140">Cantidad</th>
-                            <th width="180">Precio unitario</th>
-                            <th width="180">Subtotal</th>
+                            <th>Producto y etiquetas</th>
+                            <th width="110">Cantidad</th>
+                            <th width="160">Precio unitario</th>
+                            <th width="160">Subtotal</th>
                             <th width="80">Acción</th>
                         </tr>
                     </thead>
@@ -503,22 +546,48 @@
                         @forelse ($products as $index => $item)
                             <tr wire:key="contract-product-{{ $index }}">
                                 <td>{{ $item['cod'] }}</td>
-                                <td>{{ $item['name'] }}</td>
+
+                                <td>
+                                    <strong>{{ $item['name'] }}</strong>
+
+                                    @if (!empty($item['tags']))
+                                        <div class="mt-2">
+                                            @foreach ($item['tags'] as $tag)
+                                                <span
+                                                    class="badge badge-info mr-1 mb-1"
+                                                    wire:key="summary-tag-{{ $index }}-{{ $loop->index }}"
+                                                >
+                                                    {{ $tag['name'] }}:
+                                                    {{ $tag['value'] }}
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <div class="small text-muted mt-1">
+                                            Sin etiquetas personalizadas
+                                        </div>
+                                    @endif
+                                </td>
+
                                 <td>{{ $item['quantity'] }}</td>
+
                                 <td>
                                     Bs {{ number_format($item['price'], 2) }}
                                 </td>
+
                                 <td>
                                     Bs {{ number_format(
                                         $item['quantity'] * $item['price'],
                                         2
                                     ) }}
                                 </td>
-                                <td>
+
+                                <td class="text-center">
                                     <button
                                         type="button"
                                         wire:click="removeProduct({{ $index }})"
                                         class="btn btn-danger btn-sm"
+                                        title="Eliminar producto"
                                     >
                                         <i class="fa fa-trash"></i>
                                     </button>
@@ -537,13 +606,12 @@
                         <tfoot>
                             <tr>
                                 <th colspan="4" class="text-right">
-                                    Total
+                                    Total de la orden
                                 </th>
                                 <th>
                                     Bs {{ number_format(
                                         collect($products)->sum(
-                                            fn ($item) =>
-                                                $item['quantity'] * $item['price']
+                                            fn ($item) => $item['quantity'] * $item['price']
                                         ),
                                         2
                                     ) }}
@@ -552,44 +620,30 @@
                             </tr>
                         </tfoot>
                     @endif
-
                 </table>
             </div>
         </div>
     </div>
 
-
-    {{-- Acciones --}}
+    {{-- Guardar orden --}}
     <div class="card">
         <div class="card-body text-right">
-
-            <a
-                href="{{ route('dashboard.contracts') }}"
-                class="btn btn-secondary"
-            >
-                <i class="fa fa-times"></i>
-                Cancelar
-            </a>
-
             <button
                 type="button"
                 wire:click="save"
                 wire:loading.attr="disabled"
-                wire:target="save"
-                class="btn btn-success"
+                class="btn btn-success btn-lg"
             >
                 <span wire:loading.remove wire:target="save">
-                    <i class="fa fa-save"></i>
-                    Crear Orden
+                    <i class="fas fa-save mr-1"></i>
+                    Crear orden
                 </span>
 
                 <span wire:loading wire:target="save">
-                    <i class="fa fa-spinner fa-spin"></i>
+                    <i class="fas fa-spinner fa-spin mr-1"></i>
                     Guardando...
                 </span>
             </button>
-
         </div>
     </div>
-
 </div>

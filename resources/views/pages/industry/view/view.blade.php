@@ -9,25 +9,16 @@
     {{-- Barra de acciones --}}
     <div class="d-flex justify-content-between align-items-center mb-3">
 
-        <a
-            href="{{ route('dashboard.industries') }}"
-            class="btn btn-secondary"
-        >
+        <a href="{{ route('dashboard.industries') }}" class="btn btn-secondary">
             <i class="fa fa-arrow-left"></i>
             Volver
         </a>
 
         @if (!$editingIndustry)
-
-            <button
-                type="button"
-                wire:click="editIndustry"
-                class="btn btn-warning"
-            >
+            <button type="button" wire:click="editIndustry" class="btn btn-warning">
                 <i class="fa fa-edit"></i>
                 Editar
             </button>
-
         @endif
 
     </div>
@@ -57,14 +48,11 @@
 
                             <label>Nombre</label>
 
-                            <input
-                                type="text"
-                                wire:model="industryData.name"
-                                class="form-control @error('industryData.name') is-invalid @enderror"
-                            >
+                            <input type="text" wire:model="industryData.name"
+                                class="form-control @error('industryData.name') is-invalid @enderror">
 
                             @error('industryData.name')
-                            <span class="invalid-feedback d-block">
+                                <span class="invalid-feedback d-block">
                                     {{ $message }}
                                 </span>
                             @enderror
@@ -79,26 +67,19 @@
 
                             <label>Tipo de Area</label>
 
-                            <select
-                                wire:model="industryData.type_factory_id"
-                                class="form-control @error('industryData.type_factory_id') is-invalid @enderror"
-                            >
+                            <select wire:model="industryData.type_factory_id"
+                                class="form-control @error('industryData.type_factory_id') is-invalid @enderror">
 
-                                @foreach (
-                                    \App\Models\TypeFactory::orderBy('name')->get()
-                                    as $typeFactory
-                                )
-
+                                @foreach (\App\Models\TypeFactory::orderBy('name')->get() as $typeFactory)
                                     <option value="{{ $typeFactory->id }}">
                                         {{ $typeFactory->name }}
                                     </option>
-
                                 @endforeach
 
                             </select>
 
                             @error('industryData.type_factory_id')
-                            <span class="invalid-feedback d-block">
+                                <span class="invalid-feedback d-block">
                                     {{ $message }}
                                 </span>
                             @enderror
@@ -118,14 +99,11 @@
 
                             <label>Dirección</label>
 
-                            <input
-                                type="text"
-                                wire:model="industryData.address"
-                                class="form-control @error('industryData.address') is-invalid @enderror"
-                            >
+                            <input type="text" wire:model="industryData.address"
+                                class="form-control @error('industryData.address') is-invalid @enderror">
 
                             @error('industryData.address')
-                            <span class="invalid-feedback d-block">
+                                <span class="invalid-feedback d-block">
                                     {{ $message }}
                                 </span>
                             @enderror
@@ -140,14 +118,11 @@
 
                             <label>Teléfono</label>
 
-                            <input
-                                type="text"
-                                wire:model="industryData.phone"
-                                class="form-control @error('industryData.phone') is-invalid @enderror"
-                            >
+                            <input type="text" wire:model="industryData.phone"
+                                class="form-control @error('industryData.phone') is-invalid @enderror">
 
                             @error('industryData.phone')
-                            <span class="invalid-feedback d-block">
+                                <span class="invalid-feedback d-block">
                                     {{ $message }}
                                 </span>
                             @enderror
@@ -158,8 +133,18 @@
 
                 </div>
 
+                <div class="row">
+                    <div class="col">
+                        <label for="">Area/Sucursal</label>
+                        <select class="form-select" wire:model="industryData.type">
+                            <option value="">Seleccione Tipo</option>
+                            @foreach (\App\Enums\Type::cases() as $item)
+                                <option value="{{ $item }}">{{ $item->label() }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
             @else
-
                 <div class="row">
 
                     <div class="col-md-4">
@@ -193,15 +178,20 @@
                     </div>
 
                 </div>
+                <div class="row">
+                    <div class="mt-3 col">
 
-                <div class="mt-3">
+                        <strong>Dirección</strong>
 
-                    <strong>Dirección</strong>
+                        <div class="text-muted">
+                            {{ $industry->address ?? '-' }}
+                        </div>
 
-                    <div class="text-muted">
-                        {{ $industry->address ?? '-' }}
                     </div>
-
+                    <div class="col">
+                        <label for="">Area/Sucursal</label>
+                        <div class="text-muted">{{ $industry->type->label() }}</div>
+                    </div>
                 </div>
 
             @endif
@@ -233,44 +223,40 @@
 
                         <thead>
 
-                        <tr>
-                            <th width="80">N°</th>
-                            <th>Nombre</th>
-                            <th>Nombre de Usuario</th>
-                        </tr>
+                            <tr>
+                                <th width="80">N°</th>
+                                <th>Nombre</th>
+                                <th>Nombre de Usuario</th>
+                            </tr>
 
                         </thead>
 
                         <tbody>
 
-                        @foreach ($industry->users as $user)
+                            @foreach ($industry->users as $user)
+                                <tr>
 
-                            <tr>
+                                    <td>
+                                        {{ $user->id }}
+                                    </td>
 
-                                <td>
-                                    {{ $user->id }}
-                                </td>
+                                    <td>
+                                        {{ $user->name }}
+                                    </td>
 
-                                <td>
-                                    {{ $user->name }}
-                                </td>
+                                    <td>
+                                        {{ $user->username }}
+                                    </td>
 
-                                <td>
-                                    {{ $user->username }}
-                                </td>
-
-                            </tr>
-
-                        @endforeach
+                                </tr>
+                            @endforeach
 
                         </tbody>
 
                     </table>
 
                 </div>
-
             @else
-
                 <div class="text-center text-muted py-4">
 
                     <i class="fa fa-users fa-2x mb-2"></i>
@@ -310,76 +296,61 @@
 
                         <thead>
 
-                        <tr>
-                            <th width="80">N°</th>
-                            <th>Cliente</th>
-                            <th>Entrega</th>
-                            <th>Estado</th>
-                            <th width="80">Acción</th>
-                        </tr>
+                            <tr>
+                                <th width="80">N°</th>
+                                <th>Cliente</th>
+                                <th>Entrega</th>
+                                <th>Estado</th>
+                                <th width="80">Acción</th>
+                            </tr>
 
                         </thead>
 
                         <tbody>
 
-                        @foreach ($contracts as $contract)
+                            @foreach ($contracts as $contract)
+                                <tr>
 
-                            <tr>
+                                    <td>
+                                        {{ $contract->id }}
+                                    </td>
 
-                                <td>
-                                    {{ $contract->id }}
-                                </td>
+                                    <td>
+                                        {{ $contract->customer?->name ?? 'Cliente anónimo' }}
+                                    </td>
 
-                                <td>
-                                    {{ $contract->customer?->name ?? 'Cliente anónimo' }}
-                                </td>
+                                    <td>
 
-                                <td>
+                                        @if ($contract->delivery_date)
+                                            {{ \Carbon\Carbon::parse($contract->delivery_date)->format('d/m/Y') }}
+                                        @else
+                                            -
+                                        @endif
 
-                                    @if ($contract->delivery_date)
+                                    </td>
 
-                                        {{ \Carbon\Carbon::parse(
-                                            $contract->delivery_date
-                                        )->format('d/m/Y') }}
+                                    <td>
+                                        {{ $contract->status->label() }}
+                                    </td>
 
-                                    @else
+                                    <td>
 
-                                        -
+                                        <a href="{{ route('dashboard.contracts.view', $contract) }}"
+                                            class="btn btn-primary btn-sm">
+                                            <i class="fa fa-eye"></i>
+                                        </a>
 
-                                    @endif
+                                    </td>
 
-                                </td>
-
-                                <td>
-                                    {{ $contract->status->label() }}
-                                </td>
-
-                                <td>
-
-                                    <a
-                                        href="{{ route(
-                                                'dashboard.contracts.view',
-                                                $contract
-                                            ) }}"
-                                        class="btn btn-primary btn-sm"
-                                    >
-                                        <i class="fa fa-eye"></i>
-                                    </a>
-
-                                </td>
-
-                            </tr>
-
-                        @endforeach
+                                </tr>
+                            @endforeach
 
                         </tbody>
 
                     </table>
 
                 </div>
-
             @else
-
                 <div class="text-center text-muted py-4">
 
                     <i class="fa fa-file-signature fa-2x mb-2"></i>
@@ -419,63 +390,54 @@
 
                         <thead>
 
-                        <tr>
-                            <th>N°</th>
-                            <th>Contrato</th>
-                            <th>Producto</th>
-                            <th>Cantidad</th>
-                            <th>Estado</th>
-                        </tr>
+                            <tr>
+                                <th>N°</th>
+                                <th>Contrato</th>
+                                <th>Producto</th>
+                                <th>Cantidad</th>
+                                <th>Estado</th>
+                            </tr>
 
                         </thead>
 
                         <tbody>
 
-                        @foreach ($industry->assemblies as $assembly)
+                            @foreach ($industry->assemblies as $assembly)
+                                <tr>
 
-                            <tr>
+                                    <td>
+                                        {{ $assembly->id }}
+                                    </td>
 
-                                <td>
-                                    {{ $assembly->id }}
-                                </td>
+                                    <td>
 
-                                <td>
+                                        <a href="{{ route('dashboard.contracts.view', $assembly->contract) }}">
+                                            Contrato #{{ $assembly->contract_id }}
+                                        </a>
 
-                                    <a
-                                        href="{{ route(
-                                                'dashboard.contracts.view',
-                                                $assembly->contract
-                                            ) }}"
-                                    >
-                                        Contrato #{{ $assembly->contract_id }}
-                                    </a>
+                                    </td>
 
-                                </td>
+                                    <td>
+                                        {{ $assembly->product?->name ?? '-' }}
+                                    </td>
 
-                                <td>
-                                    {{ $assembly->product?->name ?? '-' }}
-                                </td>
+                                    <td>
+                                        {{ $assembly->quantity }}
+                                    </td>
 
-                                <td>
-                                    {{ $assembly->quantity }}
-                                </td>
+                                    <td>
+                                        {{ $assembly->status->label() }}
+                                    </td>
 
-                                <td>
-                                    {{ $assembly->status->label() }}
-                                </td>
-
-                            </tr>
-
-                        @endforeach
+                                </tr>
+                            @endforeach
 
                         </tbody>
 
                     </table>
 
                 </div>
-
             @else
-
                 <div class="text-center text-muted py-4">
 
                     No hay tareas de ensamble asignadas.
@@ -511,66 +473,55 @@
 
                         <thead>
 
-                        <tr>
-                            <th>N°</th>
-                            <th>Contrato</th>
-                            <th>Componente</th>
-                            <th>Cantidad</th>
-                            <th>Estado</th>
-                        </tr>
+                            <tr>
+                                <th>N°</th>
+                                <th>Contrato</th>
+                                <th>Componente</th>
+                                <th>Cantidad</th>
+                                <th>Estado</th>
+                            </tr>
 
                         </thead>
 
                         <tbody>
 
-                        @foreach (
-                            $industry->assemblyComponents
-                            as $assemblyComponent
-                        )
+                            @foreach ($industry->assemblyComponents as $assemblyComponent)
+                                <tr>
 
-                            <tr>
+                                    <td>
+                                        {{ $assemblyComponent->id }}
+                                    </td>
 
-                                <td>
-                                    {{ $assemblyComponent->id }}
-                                </td>
+                                    <td>
 
-                                <td>
+                                        <a
+                                            href="{{ route('dashboard.contracts.view', $assemblyComponent->assembly->contract) }}">
+                                            Contrato #{{ $assemblyComponent->assembly->contract_id }}
+                                        </a>
 
-                                    <a
-                                        href="{{ route(
-                                                'dashboard.contracts.view',
-                                                $assemblyComponent->assembly->contract
-                                            ) }}"
-                                    >
-                                        Contrato #{{ $assemblyComponent->assembly->contract_id }}
-                                    </a>
+                                    </td>
 
-                                </td>
+                                    <td>
+                                        {{ $assemblyComponent->component?->name ?? '-' }}
+                                    </td>
 
-                                <td>
-                                    {{ $assemblyComponent->component?->name ?? '-' }}
-                                </td>
+                                    <td>
+                                        {{ $assemblyComponent->quantity }}
+                                    </td>
 
-                                <td>
-                                    {{ $assemblyComponent->quantity }}
-                                </td>
+                                    <td>
+                                        {{ $assemblyComponent->status }}
+                                    </td>
 
-                                <td>
-                                    {{ $assemblyComponent->status }}
-                                </td>
-
-                            </tr>
-
-                        @endforeach
+                                </tr>
+                            @endforeach
 
                         </tbody>
 
                     </table>
 
                 </div>
-
             @else
-
                 <div class="text-center text-muted py-4">
 
                     No hay tareas de componentes asignadas.
@@ -586,16 +537,11 @@
 
     {{-- Acciones --}}
     @if (!$editingIndustry)
-
         <div class="card">
 
             <div class="card-body text-right">
 
-                <button
-                    type="button"
-                    wire:click="deleteIndustry"
-                    class="btn btn-danger"
-                >
+                <button type="button" wire:click="deleteIndustry" class="btn btn-danger">
                     <i class="fa fa-trash"></i>
                     Eliminar Area
                 </button>
@@ -603,27 +549,17 @@
             </div>
 
         </div>
-
     @else
-
         <div class="card">
 
             <div class="card-body text-right">
 
-                <button
-                    type="button"
-                    wire:click="cancelEdit"
-                    class="btn btn-secondary"
-                >
+                <button type="button" wire:click="cancelEdit" class="btn btn-secondary">
                     <i class="fa fa-times"></i>
                     Cancelar
                 </button>
 
-                <button
-                    type="button"
-                    wire:click="updateIndustry"
-                    class="btn btn-success"
-                >
+                <button type="button" wire:click="updateIndustry" class="btn btn-success">
                     <i class="fa fa-save"></i>
                     Guardar cambios
                 </button>
@@ -631,7 +567,6 @@
             </div>
 
         </div>
-
     @endif
 
 </div>
