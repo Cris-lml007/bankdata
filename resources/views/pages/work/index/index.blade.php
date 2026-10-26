@@ -178,7 +178,7 @@
                         type="search"
                         class="form-control"
                         placeholder="Ej.: cuello alto, mesa, proforma 102..."
-                        wire:model.live.debounce.350ms="search"
+                        wire:model.live.debounce.60ms="search"
                     />
 
                     @if ($search !== '')
@@ -636,7 +636,7 @@
                             <input type="search"
                                    class="form-control"
                                    placeholder="Buscar producto, código, orden o datos..."
-                                   wire:model.live.debounce.300ms="workerOrderedSearch">
+                                   wire:model.live.debounce.60ms="workerOrderedSearch">
                         </div>
                         <div class="col-md-7 text-md-right mt-2 mt-md-0">
                             <span class="text-muted">
