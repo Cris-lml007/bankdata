@@ -1,4 +1,3 @@
-
 <?php
 
 use App\Enums\Priority;
@@ -23,12 +22,113 @@ new class extends Component
     public array $receptionContracts = [];
     public array $progressInputs = [];
     public array $specificTasks = [];
+    public array $workerOrderedProducts = [];
 
     public string $search = '';
+    public string $workerView = 'cards';
+    public string $workerOrderedSearch = '';
 
     public function mount(): void
     {
         $this->loadTasks();
+    }
+
+    public function toggleWorkerView(): void
+    {
+        abort_unless($this->isWorker(), 403);
+
+        $this->workerView = $this->workerView === 'cards'
+            ? 'table'
+            : 'cards';
+    }
+
+    public function updatedWorkerOrderedSearch(): void
+    {
+        abort_unless($this->isWorker(), 403);
+        $this->buildWorkerOrderedProducts();
+    }
+
+    private function buildWorkerOrderedProducts(): void
+    {
+        $assemblies = collect($this->assemblies);
+
+        $terms = preg_split(
+            '/\\s+/u',
+            mb_strtolower(trim($this->workerOrderedSearch)),
+            -1,
+            PREG_SPLIT_NO_EMPTY
+        ) ?: [];
+
+        $groups = $assemblies
+            ->groupBy(fn ($assembly) => $assembly['product_id'] ?? $assembly['product_name'])
+            ->map(function ($items) {
+                $first = $items->first();
+
+                $orderRows = $items->map(fn ($assembly) => [
+                    'product_id' => $assembly['product_id'] ?? '',
+                    'product_cod' => $assembly['product_cod'] ?? '',
+                    'product_name' => $assembly['product_name'] ?? 'Producto',
+                    'contract_id' => $assembly['contract_id'] ?? null,
+                    'external_id' => $assembly['external_id'] ?? null,
+                    'detail_id' => $assembly['detail_id'] ?? null,
+                    'tags' => $assembly['detail_contract_tags'] ?? [],
+                    'requested' => (int) ($assembly['quantity'] ?? 0),
+                    'produced' => (int) ($assembly['progress'] ?? 0),
+                    'pending' => (int) ($assembly['pending'] ?? 0),
+                    'progress' => (int) ($assembly['percentage'] ?? 0),
+                    'priority_label' => $assembly['priority_label'] ?? '',
+                ])->values();
+
+                $requested = (int) $orderRows->sum('requested');
+                $produced = (int) $orderRows->sum('produced');
+                $pending = (int) $orderRows->sum('pending');
+
+                return [
+                    'product_id' => $first['product_id'] ?? '',
+                    'cod' => $first['product_cod'] ?? '',
+                    'name' => $first['product_name'] ?? 'Producto',
+                    'orders' => $orderRows->count(),
+                    'order_rows' => $orderRows->all(),
+                    'requested' => $requested,
+                    'produced' => $produced,
+                    'pending' => $pending,
+                    'progress' => $requested > 0
+                        ? min(100, round(($produced / $requested) * 100, 1))
+                        : 0,
+                ];
+            })
+            ->values();
+
+        if ($terms !== []) {
+            $groups = $groups->filter(function ($product) use ($terms) {
+                $textParts = [
+                    $product['product_id'],
+                    $product['cod'],
+                    $product['name'],
+                ];
+
+                foreach ($product['order_rows'] as $order) {
+                    $textParts[] = $order['contract_id'] ?? '';
+                    $textParts[] = $order['external_id'] ?? '';
+                    foreach ($order['tags'] as $tag) {
+                        $textParts[] = $tag['name'] ?? '';
+                        $textParts[] = $tag['value'] ?? '';
+                    }
+                }
+
+                $text = mb_strtolower(implode(' ', $textParts));
+
+                foreach ($terms as $term) {
+                    if (!str_contains($text, $term)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+        }
+
+        $this->workerOrderedProducts = $groups->all();
     }
 
     private function roleValue(): int
@@ -170,6 +270,7 @@ new class extends Component
         $this->assemblyGroups = [];
         $this->receptionContracts = [];
         $this->specificTasks = [];
+        $this->workerOrderedProducts = [];
 
         if ($this->isReception()) {
             $this->loadReceptionContracts();
@@ -286,6 +387,12 @@ new class extends Component
 
                     ...$this->priorityData($contract?->priority),
 
+                    'product_id' => $item->product_id,
+                    'product_cod' => $product?->cod ?? '',
+                    'detail_id' => DetailContract::query()
+                        ->where('contract_id', $item->contract_id)
+                        ->where('product_id', $item->product_id)
+                        ->value('id'),
                     'product_name' => $product?->name ?? 'Producto',
                     'product_description' => $product?->description ?? '',
 
@@ -314,6 +421,10 @@ new class extends Component
             })
             ->values()
             ->all();
+
+        if ($this->isWorker()) {
+            $this->buildWorkerOrderedProducts();
+        }
 
         /*
          * PROCESOS / COMPONENTES

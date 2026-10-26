@@ -599,12 +599,156 @@
             </div>
         </div>
 
-        {{-- ENSAMBLAJES DEL ÁREA --}}
-        <h5 class="mb-3">
-            <i class="fas fa-cubes mr-1"></i>
-            Ensamblajes de mi área
-        </h5>
+        {{-- CAMBIO DE VISTA PARA TRABAJADORES --}}
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+            <h5 class="mb-2 mb-md-0">
+                <i class="fas fa-cubes mr-1"></i>
+                Productos de mi área
+            </h5>
 
+            <div class="btn-group" role="group" aria-label="Cambiar vista de productos">
+                <button type="button"
+                        class="btn btn-sm {{ $workerView === 'cards' ? 'btn-primary' : 'btn-outline-primary' }}"
+                        wire:click="$set('workerView', 'cards')">
+                    <i class="fas fa-th-large mr-1"></i> Vista actual
+                </button>
+                <button type="button"
+                        class="btn btn-sm {{ $workerView === 'table' ? 'btn-primary' : 'btn-outline-primary' }}"
+                        wire:click="$set('workerView', 'table')">
+                    <i class="fas fa-table mr-1"></i> Tabla de productos
+                </button>
+            </div>
+        </div>
+
+        @if ($workerView === 'table')
+            {{-- TABLA DE PRODUCTOS ORDENADOS PARA TRABAJADORES --}}
+            <div class="card card-outline card-info">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-boxes mr-1"></i>
+                        Productos ordenados
+                    </h3>
+                </div>
+
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-5">
+                            <input type="search"
+                                   class="form-control"
+                                   placeholder="Buscar producto, código, orden o datos..."
+                                   wire:model.live.debounce.300ms="workerOrderedSearch">
+                        </div>
+                        <div class="col-md-7 text-md-right mt-2 mt-md-0">
+                            <span class="text-muted">
+                                Productos encontrados:
+                                <strong>{{ count($workerOrderedProducts) }}</strong>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID producto</th>
+                                    <th>Código</th>
+                                    <th>Producto</th>
+                                    <th>ID orden</th>
+                                    <th>ID externo</th>
+                                    <th>Datos</th>
+                                    <th class="text-right">Solicitado</th>
+                                    <th class="text-right">Fabricado</th>
+                                    <th class="text-right">Faltante</th>
+                                    <th style="min-width:150px">Progreso</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($workerOrderedProducts as $product)
+                                    @php
+                                        $firstOrder = $product['order_rows'][0] ?? [];
+                                    @endphp
+                                    <tr class="table-info font-weight-bold">
+                                        <td>{{ $product['product_id'] ?: '—' }}</td>
+                                        <td>{{ $product['cod'] ?: '—' }}</td>
+                                        <td>
+                                            {{ $product['name'] }}
+                                            <small class="d-block text-muted">
+                                                {{ $product['orders'] }} línea(s) de orden
+                                            </small>
+                                        </td>
+                                        <td colspan="3" class="text-muted">Total del producto</td>
+                                        <td class="text-right">{{ number_format($product['requested']) }}</td>
+                                        <td class="text-right text-success">{{ number_format($product['produced']) }}</td>
+                                        <td class="text-right text-danger">{{ number_format($product['pending']) }}</td>
+                                        <td>
+                                            <div class="progress">
+                                                <div class="progress-bar bg-success"
+                                                     role="progressbar"
+                                                     style="width: {{ $product['progress'] }}%"
+                                                     aria-valuenow="{{ $product['progress'] }}"
+                                                     aria-valuemin="0"
+                                                     aria-valuemax="100"></div>
+                                            </div>
+                                            <small>{{ number_format($product['progress'], 1) }}%</small>
+                                        </td>
+                                    </tr>
+
+                                    @foreach ($product['order_rows'] as $order)
+                                        @php
+                                            $orderProgress = $order['requested'] > 0
+                                                ? min(100, round(($order['produced'] / $order['requested']) * 100, 1))
+                                                : 0;
+                                        @endphp
+                                        <tr wire:key="worker-ordered-{{ $order['contract_id'] }}-{{ $order['product_id'] }}-{{ $loop->index }}">
+                                            <td>{{ $order['product_id'] ?: '—' }}</td>
+                                            <td>{{ $order['product_cod'] ?: '—' }}</td>
+                                            <td>{{ $order['product_name'] }}</td>
+                                            <td>
+                                                @if ($order['contract_id'])
+                                                    #{{ $order['contract_id'] }}
+                                                @else
+                                                    —
+                                                @endif
+                                            </td>
+                                            <td>{{ filled($order['external_id'] ?? null) ? $order['external_id'] : '—' }}</td>
+                                            <td>
+                                                @forelse ($order['tags'] ?? [] as $tag)
+                                                    <span class="badge badge-secondary mr-1 mb-1">
+                                                        {{ $tag['name'] }}: {{ $tag['value'] }}
+                                                    </span>
+                                                @empty
+                                                    <span class="text-muted">—</span>
+                                                @endforelse
+                                            </td>
+                                            <td class="text-right">{{ number_format($order['requested']) }}</td>
+                                            <td class="text-right text-success">{{ number_format($order['produced']) }}</td>
+                                            <td class="text-right text-danger">{{ number_format($order['pending']) }}</td>
+                                            <td>
+                                                <div class="progress">
+                                                    <div class="progress-bar bg-success"
+                                                         role="progressbar"
+                                                         style="width: {{ $orderProgress }}%"
+                                                         aria-valuenow="{{ $orderProgress }}"
+                                                         aria-valuemin="0"
+                                                         aria-valuemax="100"></div>
+                                                </div>
+                                                <small>{{ number_format($orderProgress, 1) }}%</small>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                @empty
+                                    <tr>
+                                        <td colspan="10" class="text-center text-muted">
+                                            No se encontraron productos ordenados.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        @else
         @forelse ($assemblies as $assembly)
             <div class="card" wire:key="worker-assembly-{{ $assembly['id'] }}">
                 <div class="card-body">
@@ -689,6 +833,9 @@
             </div>
         @endforelse
 
+        @endif
+
+        @if ($workerView === 'cards')
         {{-- PROCESOS DEL ÁREA --}}
         <h5 class="mb-3 mt-4">
             <i class="fas fa-tools mr-1"></i>
@@ -771,6 +918,7 @@
                 No hay procesos activos asignados a tu área.
             </div>
         @endforelse
+        @endif
 
     @endif
 </div>
