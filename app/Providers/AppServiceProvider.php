@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Enums\Role;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -13,19 +14,21 @@ class AppServiceProvider extends ServiceProvider
         //
     }
 
-public function boot(): void
-{
-    // Admin y Privilegio tienen acceso a todo.
-    Gate::before(function ($user, string $ability) {
-        if (in_array($user->role, [
-            Role::ADMIN,
-            Role::PRIVILEGED,
-        ], true)) {
-            return true;
-        }
+    public function boot(): void {
 
-        return null;
-    });
+        Paginator::useBootstrap();
+
+        // Admin y Privilegio tienen acceso a todo.
+        Gate::before(function ($user, string $ability) {
+            if (in_array($user->role, [
+                Role::ADMIN,
+                Role::PRIVILEGED,
+            ], true)) {
+                return true;
+            }
+
+            return null;
+        });
 
         // Panel de trabajo: todos los roles autenticados.
         Gate::define('view-work-panel', fn ($user) =>
