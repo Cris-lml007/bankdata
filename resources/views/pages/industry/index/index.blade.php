@@ -50,6 +50,9 @@
             </tr>
         @endforeach
 
+        <livewire:slot name="card-footer">
+                {{ $this->industries->links() }}
+        </livewire:slot>
     </livewire:table-card>
 
 </div>

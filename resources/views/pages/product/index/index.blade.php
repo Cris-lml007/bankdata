@@ -25,6 +25,10 @@
         </td>
         </tr>
         @endforeach
+
+        <livewire:slot name="card-footer">
+            {{ $this->products->links() }}
+        </livewire:slot>
     </livewire:table-card>
 
     <x-modal id="modal-register" title="Nuevo Producto">

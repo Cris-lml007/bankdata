@@ -39,6 +39,9 @@
             </tr>
         @endforeach
 
+        <livewire:slot name="card-footer">
+                {{ $this->typeFactories->links() }}
+        </livewire:slot>
     </livewire:table-card>
 
     <x-modal

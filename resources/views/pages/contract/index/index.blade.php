@@ -47,5 +47,8 @@
             </tr>
         @endforeach
 
+        <livewire:slot name="card-footer">
+                {{ $this->contracts->links() }}
+        </livewire:slot>
     </livewire:table-card>
 </div>
