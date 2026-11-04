@@ -28,6 +28,201 @@ new class extends Component
     public string $workerView = 'cards';
     public string $workerOrderedSearch = '';
 
+public string $workerSearch = '';
+
+public string $workerPriority = '';
+
+public array $workerAssemblies = [];
+
+    public array $workerAssemblyComponents = [];
+
+public array $workerAssemblyProcesses = [];
+
+public string $workerProcessSearch = '';
+
+
+public function updatedWorkerProcessSearch(): void
+{
+    abort_unless($this->isWorker(), 403);
+
+    $this->buildWorkerAssemblyProcesses();
+    }
+
+private function buildWorkerAssemblyProcesses(): void
+{
+    $processes = collect($this->assemblyComponents);
+
+    $terms = preg_split(
+        '/\s+/u',
+        mb_strtolower(trim($this->workerProcessSearch)),
+        -1,
+        PREG_SPLIT_NO_EMPTY
+    ) ?: [];
+
+    $groups = $processes
+        ->groupBy(fn ($process) =>
+            $process['component_id'] ?? $process['component_name']
+        )
+        ->map(function ($items) {
+            $first = $items->first();
+
+            $processRows = $items->map(function ($process) {
+                $tags = collect([
+                    'detail_contract_tags' => 'Contrato',
+                    'product_tags' => 'Producto',
+                    'component_tags' => 'Componente',
+                    'process_tags' => 'Proceso',
+                ])->flatMap(function ($source, $key) use ($process) {
+                    return collect($process[$key] ?? [])
+                        ->map(fn ($tag) => [
+                            'source' => $source,
+                            'name' => $tag['name'] ?? '',
+                            'value' => $tag['value'] ?? '',
+                        ]);
+                })->values()->all();
+
+                return [
+                    'process_id' => $process['id'],
+                    'component_id' => $process['component_id'] ?? null,
+                    'component_name' => $process['component_name'] ?? 'Componente',
+                    'component_description' => $process['component_description'] ?? '',
+
+                    'product_name' => $process['product_name'] ?? 'Producto',
+                    'assembly_id' => $process['assembly_id'] ?? null,
+
+                    'contract_id' => $process['contract_id'] ?? null,
+                    'external_id' => $process['external_id'] ?? null,
+                    'industry_id' => $process['industry_id'] ?? null,
+                    'industry_name' => $process['industry_name'] ?? 'Área',
+
+                    'tags' => $tags,
+
+                    'requested' => (int) ($process['quantity'] ?? 0),
+                    'produced' => (int) ($process['progress'] ?? 0),
+                    'pending' => (int) ($process['pending'] ?? 0),
+                    'progress' => (int) ($process['percentage'] ?? 0),
+
+                    'priority_label' => $process['priority_label'] ?? '',
+                    'finished' => $process['finished'] ?? false,
+                ];
+            })->values();
+
+            return [
+                'component_id' => $first['component_id'] ?? null,
+                'name' => $first['component_name'] ?? 'Componente',
+                'description' => $first['component_description'] ?? '',
+                'process_count' => $processRows->count(),
+                'process_rows' => $processRows->all(),
+
+                'requested' => (int) $processRows->sum('requested'),
+                'produced' => (int) $processRows->sum('produced'),
+                'pending' => (int) $processRows->sum('pending'),
+
+                'progress' => $processRows->sum('requested') > 0
+                    ? min(
+                        100,
+                        round(
+                            $processRows->sum('produced')
+                            / $processRows->sum('requested') * 100,
+                            1
+                        )
+                    )
+                    : 0,
+            ];
+        })
+        ->values();
+
+    if ($terms !== []) {
+        $groups = $groups->filter(function ($group) use ($terms) {
+            $matchingRows = collect($group['process_rows'])
+                ->filter(fn ($process) => $this->matchesSearch($process, $terms))
+                ->values();
+
+            if ($matchingRows->isEmpty()) {
+                return false;
+            }
+
+            $group['process_rows'] = $matchingRows->all();
+            $group['process_count'] = $matchingRows->count();
+
+            $group['requested'] = (int) $matchingRows->sum('requested');
+            $group['produced'] = (int) $matchingRows->sum('produced');
+            $group['pending'] = (int) $matchingRows->sum('pending');
+
+            $group['progress'] = $group['requested'] > 0
+                ? min(
+                    100,
+                    round(
+                        $group['produced'] / $group['requested'] * 100,
+                        1
+                    )
+                )
+                : 0;
+
+            return true;
+        })->values();
+    }
+
+    $this->workerAssemblyProcesses = $groups->all();
+}
+
+public function updatedWorkerSearch(): void
+{
+    abort_unless($this->isWorker(), 403);
+
+    $this->filterWorkerTasks();
+    }
+
+
+private function filterWorkerTasks(): void
+{
+    $terms = preg_split(
+        '/\s+/u',
+        mb_strtolower(trim($this->workerSearch)),
+        -1,
+        PREG_SPLIT_NO_EMPTY
+    ) ?: [];
+
+    $priority = $this->workerPriority;
+
+    $filter = function ($item) use ($terms, $priority) {
+
+        // Filtro de prioridad
+        if ($priority !== '' &&
+            (int) ($item['priority'] ?? Priority::NORMAL->value)
+                !== (int) $priority
+        ) {
+            return false;
+        }
+
+        // Filtro de búsqueda múltiple
+        if ($terms !== [] && !$this->matchesSearch($item, $terms)) {
+            return false;
+        }
+
+        return true;
+    };
+
+    $this->workerAssemblies = collect($this->assemblies)
+        ->filter($filter)
+        ->values()
+        ->all();
+
+    $this->workerAssemblyComponents = collect($this->assemblyComponents)
+        ->filter($filter)
+        ->values()
+        ->all();
+}
+
+
+public function updatedWorkerPriority(): void
+{
+    abort_unless($this->isWorker(), 403);
+
+    $this->filterWorkerTasks();
+}
+
+
     public function mount(): void
     {
         $this->loadTasks();
@@ -189,7 +384,7 @@ new class extends Component
             Priority::HIGH => 'warning',
             Priority::MEDIUM => 'info',
             Priority::LOW => 'secondary',
-            Priority::NORMAL => 'light',
+            Priority::NORMAL => 'success',
         };
 
         return [
@@ -271,6 +466,8 @@ new class extends Component
         $this->receptionContracts = [];
         $this->specificTasks = [];
         $this->workerOrderedProducts = [];
+        $this->workerAssemblies = [];
+        $this->workerAssemblyComponents = [];
 
         if ($this->isReception()) {
             $this->loadReceptionContracts();
@@ -402,19 +599,19 @@ new class extends Component
 
                     'detail_contract_tags' => $this->detailContractTags(
                         $item->contract_id
-                            ? (int) $item->contract_id
-                            : null,
+                        ? (int) $item->contract_id
+                        : null,
                         $item->product_id
-                            ? (int) $item->product_id
-                            : null
+                        ? (int) $item->product_id
+                        : null
                     ),
 
                     'quantity' => $quantity,
                     'progress' => $progress,
                     'pending' => max(0, $quantity - $progress),
                     'percentage' => $quantity > 0
-                        ? min(100, (int) round($progress / $quantity * 100))
-                        : 0,
+                    ? min(100, (int) round($progress / $quantity * 100))
+                    : 0,
 
                     'finished' => $this->isFinished($item->status),
                 ];
@@ -472,11 +669,11 @@ new class extends Component
 
                     'detail_contract_tags' => $this->detailContractTags(
                         $assembly?->contract_id
-                            ? (int) $assembly->contract_id
-                            : null,
+                        ? (int) $assembly->contract_id
+                        : null,
                         $assembly?->product_id
-                            ? (int) $assembly->product_id
-                            : null
+                        ? (int) $assembly->product_id
+                        : null
                     ),
 
                     'component_name' => $component?->name ?? 'Componente',
@@ -487,17 +684,19 @@ new class extends Component
                     ),
 
                     'process_tags' => $showProcessTags
-                        ? $this->tagsToArray($component->tags)
-                        : [],
+                    ? $this->tagsToArray($component->tags)
+                    : [],
 
                     'quantity' => $quantity,
                     'progress' => $progress,
                     'pending' => max(0, $quantity - $progress),
                     'percentage' => $quantity > 0
-                        ? min(100, (int) round($progress / $quantity * 100))
-                        : 0,
+                    ? min(100, (int) round($progress / $quantity * 100))
+                    : 0,
 
                     'finished' => $this->isFinished($item->status),
+
+                    'component_id' => (int) $item->component_id,
                 ];
             })
             ->values()
@@ -505,6 +704,14 @@ new class extends Component
 
         if ($this->isManagement()) {
             $this->buildAssemblyGroups();
+        }
+
+        if ($this->isWorker()) {
+            $this->filterWorkerTasks();
+        }
+
+        if ($this->isWorker()) {
+            $this->buildWorkerAssemblyProcesses();
         }
     }
 
@@ -518,19 +725,21 @@ new class extends Component
         $values = [];
 
         foreach ($item as $key => $value) {
-            if (in_array($key, [
-                'product_tags',
-                'detail_contract_tags',
-                'component_tags',
-                'process_tags',
-            ], true)) {
-                foreach ($value ?? [] as $tag) {
-                    $values[] = $tag['name'] ?? '';
-                    $values[] = $tag['value'] ?? '';
-                }
+if (in_array($key, [
+    'product_tags',
+    'detail_contract_tags',
+    'component_tags',
+    'process_tags',
+    'tags',
+], true)) {
+    foreach ($value ?? [] as $tag) {
+        $values[] = $tag['name'] ?? '';
+        $values[] = $tag['value'] ?? '';
+        $values[] = $tag['source'] ?? '';
+    }
 
-                continue;
-            }
+    continue;
+}
 
             if (is_scalar($value) || $value === null) {
                 $values[] = (string) ($value ?? '');
@@ -561,16 +770,16 @@ new class extends Component
         $groups = collect($this->assemblies)->map(function ($assembly) use (
             $componentsByAssembly
         ) {
-            $processes = $componentsByAssembly
-                ->get($assembly['id'], collect())
-                ->values();
+                $processes = $componentsByAssembly
+                    ->get($assembly['id'], collect())
+                    ->values();
 
-            return [
-                ...$assembly,
-                'processes' => $processes->all(),
-                'process_count' => $processes->count(),
-            ];
-        });
+                return [
+                    ...$assembly,
+                    'processes' => $processes->all(),
+                    'process_count' => $processes->count(),
+                ];
+            });
 
         $terms = preg_split(
             '/\s+/u',
@@ -668,8 +877,8 @@ new class extends Component
                     'progress' => $completed,
                     'pending' => max(0, $required - $completed),
                     'percentage' => $required > 0
-                        ? min(100, (int) round($completed / $required * 100))
-                        : 0,
+                    ? min(100, (int) round($completed / $required * 100))
+                    : 0,
 
                     'products' => $items->map(function ($item) use ($progress) {
                         $quantity = (int) $item->quantity;
@@ -681,8 +890,8 @@ new class extends Component
                             'progress' => $done,
                             'pending' => max(0, $quantity - $done),
                             'percentage' => $quantity > 0
-                                ? min(100, (int) round($done / $quantity * 100))
-                                : 0,
+                            ? min(100, (int) round($done / $quantity * 100))
+                            : 0,
                         ];
                     })->values()->all(),
                 ];
@@ -709,10 +918,10 @@ new class extends Component
                 'min:1',
             ],
         ], [
-            "progressInputs.{$key}.required" => 'Ingresa una cantidad.',
-            "progressInputs.{$key}.integer" => 'La cantidad debe ser un entero.',
-            "progressInputs.{$key}.min" => 'La cantidad debe ser mayor que cero.',
-        ]);
+                "progressInputs.{$key}.required" => 'Ingresa una cantidad.',
+                "progressInputs.{$key}.integer" => 'La cantidad debe ser un entero.',
+                "progressInputs.{$key}.min" => 'La cantidad debe ser mayor que cero.',
+            ]);
 
         $quantity = (int) $validated['progressInputs'][$key];
 
