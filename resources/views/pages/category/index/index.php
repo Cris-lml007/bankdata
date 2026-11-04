@@ -4,9 +4,13 @@ use App\Models\Category;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 new class extends Component
 {
+
+    use WithPagination;
+
     public $search;
 
     public $list = [
