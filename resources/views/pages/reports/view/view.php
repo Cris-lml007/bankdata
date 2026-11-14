@@ -705,6 +705,7 @@ new class extends Component
                         'external_id' => $order['external_id'],
                         'tags_text' => $order['tags_text'] ?? '',
                         'requested' => $order['requested'],
+                        'customer' => $order['customer'],
                         'price' => $order['price'] ?? 0,
                         'produced' => $order['produced'],
                         'delivered' => $order['delivered'],
@@ -716,7 +717,7 @@ new class extends Component
 
                     return $this->matchesColumnFilters($values, array_intersect_key(
                         $this->orderedColumnFilters,
-                        array_flip(['contract_id', 'external_id', 'tags_text', 'requested', 'price', 'produced', 'delivered', 'pending', 'progress'])
+                        array_flip(['contract_id', 'external_id', 'tags_text', 'requested', 'price', 'produced', 'delivered', 'pending', 'progress','customer'])
                     ));
                 })->values();
 
@@ -745,6 +746,7 @@ new class extends Component
                 $row['order_rows']->pluck('tags_text')->implode(' '),
                 $row['order_rows']->pluck('external_id')->implode(' '),
                 $row['order_rows']->pluck('contract_id')->implode(' '),
+                $row['order_rows']->pluck('customer')->implode(' '),
             ], $this->searchOrderedProducts))
             ->values();
 

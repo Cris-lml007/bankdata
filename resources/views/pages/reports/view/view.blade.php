@@ -205,6 +205,7 @@
                             <th>ID orden</th>
                             <th>ID externo</th>
                             <th>Datos</th>
+                            <th>Cliente</th>
                             <th class="text-right">Solicitado</th>
                             <th class="text-right">Precio</th>
                             <th class="text-right">Fabricado</th>
@@ -220,6 +221,7 @@
                                 'contract_id' => 'ID orden',
                                 'external_id' => 'ID externo',
                                 'tags_text' => 'Datos',
+                                'customer' => 'cliente',
                                 'requested' => 'Solicitado',
                                 'price' => 'Precio',
                                 'produced' => 'Fabricado',
@@ -251,7 +253,7 @@
                                     </a>
                                     <small class="d-block text-muted">{{ $product['orders'] }} línea(s) de orden</small>
                                 </td>
-                                <td colspan="3" class="text-muted">Total del producto</td>
+                                <td colspan="4" class="text-muted">Total del producto</td>
                                 <td class="text-right">{{ number_format($product['requested']) }}</td>
                                 <td class="text-right">—</td>
                                 <td class="text-right text-success">{{ number_format($product['produced']) }}</td>
@@ -298,6 +300,7 @@
                                             <span class="text-muted">—</span>
                                         @endforelse
                                     </td>
+                                    <td class="text-right">{{ $order['customer'] }}</td>
                                     <td class="text-right">{{ number_format($order['requested']) }}</td>
                                     <td class="text-right">{{ number_format($order['price'], 2) }}</td>
                                     <td class="text-right text-success">{{ number_format($order['produced']) }}</td>
