@@ -408,7 +408,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-md-6">
+                                <div class="col-md-6 d-none">
                                     <div class="form-group">
                                         <label>Cantidad</label>
                                         <input type="number" min="0" step="any"
@@ -421,7 +421,7 @@
                                     </div>
                                 </div>
 
-                                <div class="col-md-6">
+                                <div class="col">
                                     <div class="form-group">
                                         <label>Descripción</label>
                                         <input type="text"

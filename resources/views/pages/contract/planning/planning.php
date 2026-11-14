@@ -150,6 +150,7 @@ new class extends Component
                                 $assembly->quantity,
 
                             'industry_id' => '',
+                            'type_factory_id' => $componentProduct->type_factory_id
                         ];
                     }
 

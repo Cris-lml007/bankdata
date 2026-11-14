@@ -348,7 +348,7 @@ new class extends Component
         $this->validate([
             'inlineComponentEdit.name' => 'required|string|max:255',
             'inlineComponentEdit.description' => 'nullable|string',
-            'inlineComponentEdit.quantity' => 'required|numeric|min:0',
+            // 'inlineComponentEdit.quantity' => 'required|numeric|min:0',
             'inlineComponentEdit.type_factory_id' => 'required|exists:type_factories,id',
         ]);
 
@@ -358,7 +358,7 @@ new class extends Component
         $component->update([
             'name' => $this->inlineComponentEdit['name'],
             'description' => $this->inlineComponentEdit['description'],
-            'quantity' => $this->inlineComponentEdit['quantity'],
+            // 'quantity' => $this->inlineComponentEdit['quantity'],
             'type_factory_id' => $this->inlineComponentEdit['type_factory_id'],
         ]);
 
