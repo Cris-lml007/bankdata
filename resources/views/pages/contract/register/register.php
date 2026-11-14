@@ -38,6 +38,7 @@ new class extends Component
     public $productSearch = '';
 
     public $selectedProduct = null;
+    public bool $showCustomerSuggestions = false;
 
     public $detail = [
         'product_id' => '',
@@ -51,6 +52,9 @@ new class extends Component
      * Estas etiquetas todavía no se guardan en la base de datos.
      */
     public $tagsDraft = [];
+
+    public array $customerSuggestions = [];
+
 
     public function mount()
     {
@@ -189,15 +193,15 @@ new class extends Component
             'tagsDraft.*.name' => 'nullable|string|max:255',
             'tagsDraft.*.value' => 'nullable|string|max:255',
         ], [
-            'detail.product_id.required' => 'Selecciona un producto.',
-            'detail.product_id.exists' => 'El producto seleccionado no existe.',
-            'detail.quantity.required' => 'Ingresa la cantidad.',
-            'detail.quantity.integer' => 'La cantidad debe ser un entero.',
-            'detail.quantity.min' => 'La cantidad debe ser mayor que cero.',
-            'detail.price.required' => 'Ingresa el precio unitario.',
-            'detail.price.numeric' => 'El precio debe ser numérico.',
-            'detail.price.min' => 'El precio no puede ser negativo.',
-        ]);
+                'detail.product_id.required' => 'Selecciona un producto.',
+                'detail.product_id.exists' => 'El producto seleccionado no existe.',
+                'detail.quantity.required' => 'Ingresa la cantidad.',
+                'detail.quantity.integer' => 'La cantidad debe ser un entero.',
+                'detail.quantity.min' => 'La cantidad debe ser mayor que cero.',
+                'detail.price.required' => 'Ingresa el precio unitario.',
+                'detail.price.numeric' => 'El precio debe ser numérico.',
+                'detail.price.min' => 'El precio no puede ser negativo.',
+            ]);
 
         /*
          * Si una etiqueta tiene nombre o valor, ambos son obligatorios.
@@ -386,13 +390,75 @@ new class extends Component
         });
     }
 
+
+    public function updatedCustomerName($value): void
+    {
+        if ($this->existingCustomer) {
+            $this->existingCustomer = null;
+
+            $this->customer['ci_nit'] = '';
+            $this->customer['organization'] = '';
+            $this->customer['email'] = '';
+            $this->customer['phone'] = '';
+        }
+
+        $name = trim($value ?? '');
+
+        if (mb_strlen($name) < 2) {
+            $this->customerSuggestions = [];
+            $this->showCustomerSuggestions = false;
+            return;
+        }
+
+        $this->customerSuggestions = Customer::query()
+            ->where('name', 'LIKE', '%' . $name . '%')
+            ->orderBy('name')
+            ->limit(8)
+            ->get([
+                'id',
+                'name',
+                'ci_nit',
+                'organization',
+                'email',
+                'phone',
+            ])
+            ->toArray();
+
+        $this->showCustomerSuggestions = true;
+    }
+
+    public function hideCustomerSuggestions(): void
+    {
+        $this->showCustomerSuggestions = false;
+    }
+
+    public function selectCustomer(int $customerId): void
+    {
+        $customer = Customer::findOrFail($customerId);
+
+        $this->customer = [
+            'ci_nit' => $customer->ci_nit ?? '',
+            'name' => $customer->name ?? '',
+            'organization' => $customer->organization ?? '',
+            'email' => $customer->email ?? '',
+            'phone' => $customer->phone ?? '',
+        ];
+
+        $this->existingCustomer = $customer;
+        $this->customerSuggestions = [];
+
+        $this->resetValidation('customer');
+        $this->showCustomerSuggestions = false;
+    }
+
+
     public function render()
     {
         $productResults = [];
 
         if (
             strlen(trim($this->productSearch)) >= 1 &&
-            !$this->selectedProduct
+                !$this->selectedProduct
         ) {
             $search = trim($this->productSearch);
 

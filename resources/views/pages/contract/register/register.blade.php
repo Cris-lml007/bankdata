@@ -20,19 +20,12 @@
                         <label>CI / NIT</label>
 
                         <div class="input-group">
-                            <input
-                                type="text"
-                                wire:model="customer.ci_nit"
+                            <input type="text" wire:model="customer.ci_nit"
                                 class="form-control @error('customer.ci_nit') is-invalid @enderror"
-                                placeholder="Ingrese CI o NIT"
-                            >
+                                placeholder="Ingrese CI o NIT">
 
                             <div class="input-group-append">
-                                <button
-                                    type="button"
-                                    wire:click="searchCustomer"
-                                    class="btn btn-primary"
-                                >
+                                <button type="button" wire:click="searchCustomer" class="btn btn-primary">
                                     <i class="fa fa-search"></i>
                                     Buscar
                                 </button>
@@ -66,19 +59,57 @@
 
                 {{-- Nombre --}}
                 <div class="col-md-7">
-                    <div class="form-group">
+                    <div class="form-group position-relative">
                         <label>Nombre</label>
 
-                        <input
-                            type="text"
-                            wire:model="customer.name"
+                        <input type="text" wire:model.live.debounce.300ms="customer.name"
+                            wire:focus="$set('showCustomerSuggestions', true)" wire:blur="hideCustomerSuggestions"
                             class="form-control @error('customer.name') is-invalid @enderror"
-                            placeholder="Nombre del cliente"
-                        >
+                            placeholder="Nombre del cliente" autocomplete="off">
 
                         @error('customer.name')
                             <span class="invalid-feedback d-block">{{ $message }}</span>
                         @enderror
+
+                        {{-- Resultados de búsqueda --}}
+                        @if ($showCustomerSuggestions && count($customerSuggestions) > 0)
+                            <div class="list-group position-absolute w-100 shadow"
+                                style="z-index: 1050; top: 100%; max-height: 240px; overflow-y: auto;">
+                                @foreach ($customerSuggestions as $suggestion)
+                                    <button type="button" wire:key="customer-suggestion-{{ $suggestion['id'] }}"
+                                        wire:mousedown.prevent="selectCustomer({{ $suggestion['id'] }})"
+                                        class="list-group-item list-group-item-action text-left">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <strong>{{ $suggestion['name'] }}</strong>
+                                            <small class="text-muted">
+                                                {{ $suggestion['ci_nit'] ?: 'Sin CI/NIT' }}
+                                            </small>
+                                        </div>
+
+                                        @if ($suggestion['organization'])
+                                            <small class="text-muted">
+                                                {{ $suggestion['organization'] }}
+                                            </small>
+                                        @endif
+                                    </button>
+                                @endforeach
+                            </div>
+                        @endif
+
+                        {{-- Estado del cliente --}}
+                        <div style="height: 21px;">
+                            @if ($existingCustomer)
+                                <small class="text-success">
+                                    <i class="fa fa-check-circle"></i>
+                                    Cliente seleccionado
+                                </small>
+                            @elseif (trim($customer['name'] ?? '') !== '')
+                                <small class="text-info">
+                                    <i class="fa fa-info-circle"></i>
+                                    Si no selecciona un resultado, se registrará como cliente nuevo.
+                                </small>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>
@@ -89,12 +120,9 @@
                     <div class="form-group">
                         <label>Organización</label>
 
-                        <input
-                            type="text"
-                            wire:model="customer.organization"
+                        <input type="text" wire:model="customer.organization"
                             class="form-control @error('customer.organization') is-invalid @enderror"
-                            placeholder="Empresa / Organización"
-                        >
+                            placeholder="Empresa / Organización">
 
                         @error('customer.organization')
                             <span class="invalid-feedback d-block">{{ $message }}</span>
@@ -107,12 +135,9 @@
                     <div class="form-group">
                         <label>Email</label>
 
-                        <input
-                            type="email"
-                            wire:model="customer.email"
+                        <input type="email" wire:model="customer.email"
                             class="form-control @error('customer.email') is-invalid @enderror"
-                            placeholder="correo@ejemplo.com"
-                        >
+                            placeholder="correo@ejemplo.com">
 
                         @error('customer.email')
                             <span class="invalid-feedback d-block">{{ $message }}</span>
@@ -125,12 +150,8 @@
                     <div class="form-group">
                         <label>Teléfono</label>
 
-                        <input
-                            type="text"
-                            wire:model="customer.phone"
-                            class="form-control @error('customer.phone') is-invalid @enderror"
-                            placeholder="Teléfono"
-                        >
+                        <input type="text" wire:model="customer.phone"
+                            class="form-control @error('customer.phone') is-invalid @enderror" placeholder="Teléfono">
 
                         @error('customer.phone')
                             <span class="invalid-feedback d-block">{{ $message }}</span>
@@ -157,11 +178,8 @@
                     <div class="form-group">
                         <label>Fecha de entrega</label>
 
-                        <input
-                            type="date"
-                            wire:model="contract.delivery_date"
-                            class="form-control @error('contract.delivery_date') is-invalid @enderror"
-                        >
+                        <input type="date" wire:model="contract.delivery_date"
+                            class="form-control @error('contract.delivery_date') is-invalid @enderror">
 
                         @error('contract.delivery_date')
                             <span class="invalid-feedback d-block">{{ $message }}</span>
@@ -174,12 +192,9 @@
                     <div class="form-group">
                         <label>Destino</label>
 
-                        <input
-                            type="text"
-                            wire:model="contract.destination"
+                        <input type="text" wire:model="contract.destination"
                             class="form-control @error('contract.destination') is-invalid @enderror"
-                            placeholder="Destino del contrato"
-                        >
+                            placeholder="Destino del contrato">
 
                         @error('contract.destination')
                             <span class="invalid-feedback d-block">{{ $message }}</span>
@@ -192,10 +207,8 @@
                     <div class="form-group">
                         <label>Método de pago</label>
 
-                        <select
-                            wire:model="contract.method_payment"
-                            class="form-control @error('contract.method_payment') is-invalid @enderror"
-                        >
+                        <select wire:model="contract.method_payment"
+                            class="form-control @error('contract.method_payment') is-invalid @enderror">
                             @foreach (\App\Enums\TypePayment::cases() as $method)
                                 <option value="{{ $method->value }}">
                                     {{ $method->label() }}
@@ -216,10 +229,8 @@
                     <div class="form-group">
                         <label>Prioridad</label>
 
-                        <select
-                            wire:model="contract.priority"
-                            class="form-control @error('contract.priority') is-invalid @enderror"
-                        >
+                        <select wire:model="contract.priority"
+                            class="form-control @error('contract.priority') is-invalid @enderror">
                             <option value="1">1 - Alta</option>
                             <option value="2">2 - Urgente</option>
                             <option value="3">3 - Media</option>
@@ -238,12 +249,9 @@
                     <div class="form-group">
                         <label>ID de proforma externa</label>
 
-                        <input
-                            type="text"
-                            wire:model="contract.external_id"
+                        <input type="text" wire:model="contract.external_id"
                             class="form-control @error('contract.external_id') is-invalid @enderror"
-                            placeholder="Ej. PROF-00125"
-                        >
+                            placeholder="Ej. PROF-00125">
 
                         <small class="form-text text-muted">
                             Identificador de la proforma del otro sistema.
@@ -260,10 +268,8 @@
                     <div class="form-group">
                         <label>Sucursal</label>
 
-                        <select
-                            wire:model="contract.industry_id"
-                            class="form-control @error('contract.industry_id') is-invalid @enderror"
-                        >
+                        <select wire:model="contract.industry_id"
+                            class="form-control @error('contract.industry_id') is-invalid @enderror">
                             <option value="">Seleccione un área o sucursal</option>
 
                             @foreach ($industries as $industry)
@@ -302,26 +308,16 @@
                     <div class="form-group position-relative">
                         <label>Producto</label>
 
-                        <input
-                            type="text"
-                            wire:model.live.debounce.300ms="productSearch"
+                        <input type="text" wire:model.live.debounce.300ms="productSearch"
                             class="form-control @error('detail.product_id') is-invalid @enderror"
-                            placeholder="Buscar por código o nombre..."
-                            autocomplete="off"
-                        >
+                            placeholder="Buscar por código o nombre..." autocomplete="off">
 
                         @if (count($productResults))
-                            <div
-                                class="list-group position-absolute w-100"
-                                style="z-index: 1000;"
-                            >
+                            <div class="list-group position-absolute w-100" style="z-index: 1000;">
                                 @foreach ($productResults as $product)
-                                    <button
-                                        type="button"
-                                        wire:key="product-result-{{ $product->id }}"
+                                    <button type="button" wire:key="product-result-{{ $product->id }}"
                                         wire:click="selectProduct({{ $product->id }})"
-                                        class="list-group-item list-group-item-action text-left"
-                                    >
+                                        class="list-group-item list-group-item-action text-left">
                                         <strong>{{ $product->cod }}</strong>
                                         <span class="ml-2">{{ $product->name }}</span>
                                     </button>
@@ -349,13 +345,8 @@
                     <div class="form-group">
                         <label>Cantidad</label>
 
-                        <input
-                            type="number"
-                            min="1"
-                            step="1"
-                            wire:model="detail.quantity"
-                            class="form-control @error('detail.quantity') is-invalid @enderror"
-                        >
+                        <input type="number" min="1" step="1" wire:model="detail.quantity"
+                            class="form-control @error('detail.quantity') is-invalid @enderror">
 
                         <div style="height: 21px;"></div>
 
@@ -370,16 +361,11 @@
                     <div class="form-group">
                         <label>Precio unitario</label>
 
-                        <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            wire:model="detail.price"
+                        <input type="number" step="0.01" min="0" wire:model="detail.price"
                             class="form-control @error('detail.price') is-invalid @enderror"
                             placeholder="{{ $selectedProduct
                                 ? 'Referencial: Bs ' . number_format($selectedProduct->price_sale, 2)
-                                : 'Precio del contrato' }}"
-                        >
+                                : 'Precio del contrato' }}">
 
                         <div style="height: 21px;">
                             @if ($selectedProduct)
@@ -403,11 +389,7 @@
                     <div class="form-group">
                         <label>&nbsp;</label>
 
-                        <button
-                            type="button"
-                            wire:click="addProduct"
-                            class="btn btn-primary btn-block"
-                        >
+                        <button type="button" wire:click="addProduct" class="btn btn-primary btn-block">
                             <i class="fa fa-plus"></i>
                             Agregar
                         </button>
@@ -443,20 +425,14 @@
                         </div>
 
                         @foreach ($tagsDraft as $index => $tag)
-                            <div
-                                class="row align-items-start mb-2"
-                                wire:key="draft-tag-{{ $index }}"
-                            >
+                            <div class="row align-items-start mb-2" wire:key="draft-tag-{{ $index }}">
                                 <div class="col-md-5">
                                     <div class="form-group mb-1">
                                         <label>Nombre de etiqueta</label>
 
-                                        <input
-                                            type="text"
-                                            wire:model="tagsDraft.{{ $index }}.name"
+                                        <input type="text" wire:model="tagsDraft.{{ $index }}.name"
                                             class="form-control @error('tagsDraft.' . $index . '.name') is-invalid @enderror"
-                                            placeholder="Ej. Color, Material, Acabado"
-                                        >
+                                            placeholder="Ej. Color, Material, Acabado">
 
                                         @error('tagsDraft.' . $index . '.name')
                                             <span class="invalid-feedback d-block">
@@ -470,12 +446,9 @@
                                     <div class="form-group mb-1">
                                         <label>Valor</label>
 
-                                        <input
-                                            type="text"
-                                            wire:model="tagsDraft.{{ $index }}.value"
+                                        <input type="text" wire:model="tagsDraft.{{ $index }}.value"
                                             class="form-control @error('tagsDraft.' . $index . '.value') is-invalid @enderror"
-                                            placeholder="Ej. Negro, Acero, Mate"
-                                        >
+                                            placeholder="Ej. Negro, Acero, Mate">
 
                                         @error('tagsDraft.' . $index . '.value')
                                             <span class="invalid-feedback d-block">
@@ -488,12 +461,8 @@
                                 <div class="col-md-2">
                                     <label>&nbsp;</label>
 
-                                    <button
-                                        type="button"
-                                        wire:click="removeTag({{ $index }})"
-                                        class="btn btn-outline-danger btn-block"
-                                        title="Eliminar etiqueta"
-                                    >
+                                    <button type="button" wire:click="removeTag({{ $index }})"
+                                        class="btn btn-outline-danger btn-block" title="Eliminar etiqueta">
                                         <i class="fas fa-trash"></i>
                                         Eliminar
                                     </button>
@@ -501,11 +470,7 @@
                             </div>
                         @endforeach
 
-                        <button
-                            type="button"
-                            wire:click="addTag"
-                            class="btn btn-outline-info btn-sm mt-2"
-                        >
+                        <button type="button" wire:click="addTag" class="btn btn-outline-info btn-sm mt-2">
                             <i class="fas fa-plus mr-1"></i>
                             Añadir etiqueta
                         </button>
@@ -553,10 +518,8 @@
                                     @if (!empty($item['tags']))
                                         <div class="mt-2">
                                             @foreach ($item['tags'] as $tag)
-                                                <span
-                                                    class="badge badge-info mr-1 mb-1"
-                                                    wire:key="summary-tag-{{ $index }}-{{ $loop->index }}"
-                                                >
+                                                <span class="badge badge-info mr-1 mb-1"
+                                                    wire:key="summary-tag-{{ $index }}-{{ $loop->index }}">
                                                     {{ $tag['name'] }}:
                                                     {{ $tag['value'] }}
                                                 </span>
@@ -576,19 +539,13 @@
                                 </td>
 
                                 <td>
-                                    Bs {{ number_format(
-                                        $item['quantity'] * $item['price'],
-                                        2
-                                    ) }}
+                                    Bs
+                                    {{ number_format($item['quantity'] * $item['price'], 2) }}
                                 </td>
 
                                 <td class="text-center">
-                                    <button
-                                        type="button"
-                                        wire:click="removeProduct({{ $index }})"
-                                        class="btn btn-danger btn-sm"
-                                        title="Eliminar producto"
-                                    >
+                                    <button type="button" wire:click="removeProduct({{ $index }})"
+                                        class="btn btn-danger btn-sm" title="Eliminar producto">
                                         <i class="fa fa-trash"></i>
                                     </button>
                                 </td>
@@ -609,12 +566,8 @@
                                     Total de la orden
                                 </th>
                                 <th>
-                                    Bs {{ number_format(
-                                        collect($products)->sum(
-                                            fn ($item) => $item['quantity'] * $item['price']
-                                        ),
-                                        2
-                                    ) }}
+                                    Bs
+                                    {{ number_format(collect($products)->sum(fn($item) => $item['quantity'] * $item['price']), 2) }}
                                 </th>
                                 <th></th>
                             </tr>
@@ -628,12 +581,7 @@
     {{-- Guardar orden --}}
     <div class="card">
         <div class="card-body text-right">
-            <button
-                type="button"
-                wire:click="save"
-                wire:loading.attr="disabled"
-                class="btn btn-success btn-lg"
-            >
+            <button type="button" wire:click="save" wire:loading.attr="disabled" class="btn btn-success btn-lg">
                 <span wire:loading.remove wire:target="save">
                     <i class="fas fa-save mr-1"></i>
                     Crear orden
