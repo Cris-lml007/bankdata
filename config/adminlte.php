@@ -316,6 +316,12 @@ return [
         ],
 
         [
+            'text' => 'Historial de Trabajo',
+            'route' => 'dashboard.history-works',
+            'icon' => 'fas fa-fw fa-clock',
+        ],
+
+        [
             'text' => 'Tareas',
             'route' => 'dashboard.tasks',
             'icon' => 'fas fa-fw fa-tasks',

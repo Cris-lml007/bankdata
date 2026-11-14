@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasActivityLogs;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BuildIndustry extends Model
 {
+    use HasActivityLogs, SoftDeletes;
+
     protected $fillable = [
         'industry_id',
         'quantity',
