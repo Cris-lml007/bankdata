@@ -231,10 +231,10 @@
 
                         <select wire:model="contract.priority"
                             class="form-control @error('contract.priority') is-invalid @enderror">
-                            <option value="1">1 - Alta</option>
+                            <!-- <option value="1">1 - Alta</option> -->
                             <option value="2">2 - Urgente</option>
-                            <option value="3">3 - Media</option>
-                            <option value="4">4 - Baja</option>
+                            <!-- <option value="3">3 - Media</option> -->
+                            <!-- <option value="4">4 - Baja</option> -->
                             <option value="5">5 - Normal</option>
                         </select>
 
