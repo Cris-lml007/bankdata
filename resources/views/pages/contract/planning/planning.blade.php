@@ -181,7 +181,7 @@
                                                     </option>
 
                                                     @foreach ($industries as $industry)
-                                                        @if ($industry->typeFactory->id == $product['type_factory_id'])
+                                                        @if ($industry?->typeFactory?->id == $product['type_factory_id'])
                                                             <option value="{{ $industry->id }}">
                                                                 {{ $industry->name }}
                                                             </option>

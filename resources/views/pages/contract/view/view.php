@@ -233,7 +233,8 @@ new class extends Component
                     ->where(
                         'product_id',
                         $detail->product_id
-                    );
+                        )
+                        ->where('detail_contract_id',$detail->id);
 
 
                 return [

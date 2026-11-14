@@ -13,6 +13,7 @@ class Assembly extends Model
         'quantity',
         'industry_id',
         'status',
+        'detail_contract_id'
     ];
 
     public function product()

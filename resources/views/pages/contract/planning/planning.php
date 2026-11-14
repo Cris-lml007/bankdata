@@ -172,6 +172,8 @@ new class extends Component
                     'product_id' =>
                         $detail->product_id,
 
+                    'detail_contract_id' => $detail->id,
+
                     'product_name' =>
                         $detail->product->name,
 
@@ -218,6 +220,8 @@ new class extends Component
             $this->planning[] = [
                 'product_id' =>
                     $detail->product_id,
+
+                'detail_contract_id' => $detail->id,
 
                 'product_name' =>
                     $detail->product->name,
@@ -516,6 +520,8 @@ new class extends Component
                 $productId =
                     $productPlan['product_id'];
 
+                $detailContractId = $productPlan['detail_contract_id'];
+
                 /*
                  * Assemblies existentes de este producto.
                  */
@@ -528,6 +534,7 @@ new class extends Component
                         'product_id',
                         $productId
                     )
+                    ->where('detail_contract_id',$detailContractId)
                     ->get()
                     ->keyBy('id');
 
@@ -586,6 +593,8 @@ new class extends Component
 
                             'contract_id' =>
                                 $this->contract->id,
+
+                            'detail_contract_id' => $detailContractId,
 
                             'quantity' =>
                                 $quantity,
@@ -707,6 +716,7 @@ new class extends Component
                             'product_id',
                             $productId
                         )
+                        ->where('detail_contract_id',$detailContractId)
                         ->whereNotIn(
                             'id',
                             $usedAssemblyIds
@@ -723,6 +733,7 @@ new class extends Component
                             'product_id',
                             $productId
                         )
+                        ->where('detail_contract_id',$detailContractId)
                         ->delete();
                 }
             }
