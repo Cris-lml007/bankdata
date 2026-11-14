@@ -12,9 +12,9 @@
     {{-- ENCABEZADO --}}
     <div class="row mb-3">
         <div class="col-md-8 col-12">
-            <h1 class="mb-1">Panel de trabajo</h1>
+            <h1 class="mb-1">{{ auth()->user()->industry?->name ?? 'Panel de Trabajo' }}</h1>
             <small class="text-muted">
-                {{ auth()->user()->industry?->name }}
+                {{ auth()->user()->industry?->name != null ? 'Panel de Trabajo' : '' }}
             </small>
         </div>
 

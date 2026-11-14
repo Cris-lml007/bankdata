@@ -411,16 +411,21 @@ public function updatedWorkerPriority(): void
      * al producto solicitado en el contrato.
      */
     private function detailContractTags(
-        ?int $contractId,
-        ?int $productId
+        ?int $detailContractId
+        // ?int $contractId,
+        // ?int $productId
     ): array {
-        if (!$contractId || !$productId) {
+        // if (!$contractId || !$productId) {
+        //     return [];
+        // }
+        if(!$detailContractId){
             return [];
         }
 
         return DetailContract::query()
-            ->where('contract_id', $contractId)
-            ->where('product_id', $productId)
+            ->where('id',$detailContractId)
+            // ->where('contract_id', $contractId)
+            // ->where('product_id', $productId)
             ->with('tags')
             ->get()
             ->flatMap(fn ($detail) => $detail->tags)
@@ -598,12 +603,13 @@ public function updatedWorkerPriority(): void
                     ),
 
                     'detail_contract_tags' => $this->detailContractTags(
-                        $item->contract_id
-                        ? (int) $item->contract_id
-                        : null,
-                        $item->product_id
-                        ? (int) $item->product_id
-                        : null
+                        // $item->contract_id
+                        // ? (int) $item->contract_id
+                        // : null,
+                        // $item->product_id
+                        // ? (int) $item->product_id
+                        // : null
+                        $item->detail_contract_id ? (int)$item->detail_contract_id : null
                     ),
 
                     'quantity' => $quantity,
@@ -668,20 +674,21 @@ public function updatedWorkerPriority(): void
                     ),
 
                     'detail_contract_tags' => $this->detailContractTags(
-                        $assembly?->contract_id
-                        ? (int) $assembly->contract_id
-                        : null,
-                        $assembly?->product_id
-                        ? (int) $assembly->product_id
-                        : null
+                        // $assembly?->contract_id
+                        // ? (int) $assembly->contract_id
+                        // : null,
+                        // $assembly?->product_id
+                        // ? (int) $assembly->product_id
+                        // : null
+                        $item->detail_contract_id ? (int) $item->detail_contract_id : null
                     ),
 
                     'component_name' => $component?->name ?? 'Componente',
                     'component_description' => $component?->description ?? '',
 
-                    'component_tags' => $this->tagsToArray(
-                        $component?->tags
-                    ),
+                    // 'component_tags' => $this->tagsToArray(
+                    //     $component?->tags
+                    // ),
 
                     'process_tags' => $showProcessTags
                     ? $this->tagsToArray($component->tags)
