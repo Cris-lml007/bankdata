@@ -547,7 +547,7 @@
 
                         @if ($task['description'])
                             <p class="text-muted mb-0 mt-2">
-                                {!! nl2br(e($task['description'])) !!}
+                                {!! $task['description'] !!}
                             </p>
                         @endif
                     </div>

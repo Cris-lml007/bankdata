@@ -104,6 +104,8 @@ new class extends Component {
         $this->resetForm();
 
         $this->showForm = true;
+
+        $this->dispatch('task-editor-load', description: '');
     }
 
     public function edit(int $id): void
@@ -122,8 +124,11 @@ new class extends Component {
         ];
 
         $this->resetValidation();
+        // $this->form['description'] = $task->description ?? '';
 
         $this->showForm = true;
+
+        $this->dispatch('task-editor-load', description: $this->form['description'] ?? '');
     }
 
     public function save(): void

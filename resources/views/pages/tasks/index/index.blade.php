@@ -30,11 +30,7 @@
                     </h3>
 
                     <div class="card-tools">
-                        <button
-                            type="button"
-                            class="btn btn-tool"
-                            wire:click="cancel"
-                        >
+                        <button type="button" class="btn btn-tool" wire:click="cancel">
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
@@ -52,13 +48,9 @@
                                         <span class="text-danger">*</span>
                                     </label>
 
-                                    <input
-                                        id="task-name"
-                                        type="text"
+                                    <input id="task-name" type="text"
                                         class="form-control @error('form.name') is-invalid @enderror"
-                                        wire:model="form.name"
-                                        placeholder="Ej. Preparar estructura metálica"
-                                    >
+                                        wire:model="form.name" placeholder="Ej. Preparar estructura metálica">
 
                                     @error('form.name')
                                         <span class="invalid-feedback">
@@ -76,11 +68,9 @@
                                         <span class="text-danger">*</span>
                                     </label>
 
-                                    <select
-                                        id="task-industry"
+                                    <select id="task-industry"
                                         class="form-control @error('form.industry_id') is-invalid @enderror"
-                                        wire:model="form.industry_id"
-                                    >
+                                        wire:model="form.industry_id">
                                         <option value="">Seleccionar área...</option>
 
                                         @foreach ($this->industries as $industry)
@@ -105,12 +95,9 @@
                                         Fecha límite
                                     </label>
 
-                                    <input
-                                        id="task-date"
-                                        type="date"
+                                    <input id="task-date" type="date"
                                         class="form-control @error('form.to') is-invalid @enderror"
-                                        wire:model="form.to"
-                                    >
+                                        wire:model="form.to">
 
                                     @error('form.to')
                                         <span class="invalid-feedback">
@@ -127,20 +114,14 @@
                             {{-- Descripción --}}
                             <div class="col-md-12">
                                 <div class="form-group">
-                                    <label for="task-description">
-                                        Descripción
-                                    </label>
+                                    <label>Descripción</label>
 
-                                    <textarea
-                                        id="task-description"
-                                        rows="3"
-                                        class="form-control @error('form.description') is-invalid @enderror"
-                                        wire:model="form.description"
-                                        placeholder="Describe qué se debe realizar..."
-                                    ></textarea>
+                                    <div wire:ignore wire:key="task-editor-{{ $taskId ?? 'new' }}">
+                                        <textarea id="task-description" class="form-control">{{ $form['description'] ?? '' }}</textarea>
+                                    </div>
 
                                     @error('form.description')
-                                        <span class="invalid-feedback">
+                                        <span class="text-danger">
                                             {{ $message }}
                                         </span>
                                     @enderror
@@ -151,11 +132,7 @@
                     </div>
 
                     <div class="card-footer">
-                        <button
-                            type="submit"
-                            class="btn btn-primary"
-                            wire:loading.attr="disabled"
-                        >
+                        <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">
                             <span wire:loading.remove wire:target="save">
                                 <i class="fas fa-save mr-1"></i>
                                 {{ $taskId ? 'Guardar cambios' : 'Crear tarea' }}
@@ -167,11 +144,7 @@
                             </span>
                         </button>
 
-                        <button
-                            type="button"
-                            class="btn btn-secondary"
-                            wire:click="cancel"
-                        >
+                        <button type="button" class="btn btn-secondary" wire:click="cancel">
                             Cancelar
                         </button>
                     </div>
@@ -188,11 +161,7 @@
                 </h3>
 
                 <div class="card-tools">
-                    <button
-                        type="button"
-                        class="btn btn-primary btn-sm"
-                        wire:click="create"
-                    >
+                    <button type="button" class="btn btn-primary btn-sm" wire:click="create">
                         <i class="fas fa-plus mr-1"></i>
                         Nueva tarea
                     </button>
@@ -205,12 +174,8 @@
                 <div class="row mb-3">
                     <div class="col-md-5 mb-2">
                         <div class="input-group">
-                            <input
-                                type="search"
-                                class="form-control"
-                                placeholder="Buscar por nombre o descripción..."
-                                wire:model.live.debounce.300ms="search"
-                            >
+                            <input type="search" class="form-control" placeholder="Buscar por nombre o descripción..."
+                                wire:model.live.debounce.300ms="search">
 
                             <div class="input-group-append">
                                 <span class="input-group-text">
@@ -221,10 +186,7 @@
                     </div>
 
                     <div class="col-md-4 mb-2">
-                        <select
-                            class="form-control"
-                            wire:model.live="industryFilter"
-                        >
+                        <select class="form-control" wire:model.live="industryFilter">
                             <option value="">Todas las áreas</option>
 
                             @foreach ($this->industries as $industry)
@@ -262,7 +224,7 @@
 
                                         @if ($task->description)
                                             <p class="text-muted small mb-0 mt-1">
-                                                {{ $task->description }}
+                                                {!! $task->description !!}
                                             </p>
                                         @endif
                                     </td>
@@ -303,22 +265,14 @@
                                     </td>
 
                                     <td class="text-center">
-                                        <button
-                                            type="button"
-                                            class="btn btn-warning btn-sm"
-                                            title="Editar"
-                                            wire:click="edit({{ $task->id }})"
-                                        >
+                                        <button type="button" class="btn btn-warning btn-sm" title="Editar"
+                                            wire:click="edit({{ $task->id }})">
                                             <i class="fas fa-edit"></i>
                                         </button>
 
-                                        <button
-                                            type="button"
-                                            class="btn btn-danger btn-sm"
-                                            title="Eliminar"
+                                        <button type="button" class="btn btn-danger btn-sm" title="Eliminar"
                                             wire:click="delete({{ $task->id }})"
-                                            wire:confirm="¿Seguro que deseas eliminar esta tarea?"
-                                        >
+                                            wire:confirm="¿Seguro que deseas eliminar esta tarea?">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </td>
@@ -347,3 +301,77 @@
 
     </div>
 </div>
+
+@script
+    <script>
+        let taskEditor = null;
+
+        function initializeTaskEditor() {
+            const editor = $('#task-description');
+
+            if (!editor.length) {
+                return;
+            }
+
+            if (typeof $.fn.summernote !== 'function') {
+                console.error('Summernote no está disponible');
+                return;
+            }
+
+            if (!editor.next('.note-editor').length) {
+                editor.summernote({
+                    height: 180,
+                    placeholder: 'Describe qué se debe realizar...',
+                    toolbar: [
+                        ['font', ['bold', 'italic', 'underline', 'clear']],
+                        ['fontname', ['fontname']],
+                        ['fontsize', ['fontsize']],
+                        ['color', ['color']],
+                        ['para', ['ul', 'ol', 'paragraph']],
+                        ['insert', ['link']],
+                        ['view', ['undo', 'redo', 'codeview']]
+                    ],
+                    callbacks: {
+                        onChange: function(contents) {
+                            $wire.set('form.description', contents);
+                        }
+                    }
+                });
+            }
+
+            taskEditor = editor;
+        }
+
+        function setTaskEditorContent(description) {
+            initializeTaskEditor();
+
+            if (!taskEditor || !taskEditor.length) {
+                return;
+            }
+
+            taskEditor.summernote('code', description || '');
+        }
+
+        initializeTaskEditor();
+
+        // Recibir la descripción al crear o editar
+        $wire.on('task-editor-load', (event) => {
+            requestAnimationFrame(() => {
+                setTaskEditorContent(event.description);
+            });
+        });
+
+        // Destruir el editor cuando desaparece el formulario
+        Livewire.hook('commit', ({
+            succeed
+        }) => {
+            succeed(() => {
+                requestAnimationFrame(() => {
+                    if (!$('#task-description').length && taskEditor) {
+                        taskEditor = null;
+                    }
+                });
+            });
+        });
+    </script>
+@endscript
