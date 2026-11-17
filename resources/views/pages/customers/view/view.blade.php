@@ -19,51 +19,213 @@
         </div>
     </div>
 
+
     {{-- DATOS DEL CLIENTE --}}
-    <div class="card">
+    <div class="card card-outline card-primary">
         <div class="card-header">
             <h3 class="card-title">
                 <i class="fas fa-user mr-1"></i>
                 Datos del cliente
             </h3>
+
+            <div class="card-tools">
+                @if (!$editingCustomer)
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-primary"
+                        wire:click="editCustomer"
+                    >
+                        <i class="fas fa-edit mr-1"></i>
+                        Editar cliente
+                    </button>
+                @endif
+            </div>
         </div>
 
         <div class="card-body">
-            <div class="row">
-                <div class="col-md-6 col-lg-4 mb-3">
-                    <small class="text-muted d-block">Nombre</small>
-                    <strong>{{ $customer->name }}</strong>
-                </div>
 
-                <div class="col-md-6 col-lg-4 mb-3">
-                    <small class="text-muted d-block">Organización</small>
-                    <strong>{{ $customer->organization ?: '—' }}</strong>
-                </div>
+            @if (session()->has('customerUpdated'))
+                <div class="alert alert-success alert-dismissible fade show">
+                    <i class="fas fa-check-circle mr-1"></i>
+                    {{ session('customerUpdated') }}
 
-                <div class="col-md-6 col-lg-4 mb-3">
-                    <small class="text-muted d-block">CI / NIT</small>
-                    <strong>{{ $customer->ci_nit ?: '—' }}</strong>
+                    <button type="button" class="close" data-dismiss="alert">
+                        <span>&times;</span>
+                    </button>
                 </div>
+            @endif
 
-                <div class="col-md-6 col-lg-4 mb-3">
-                    <small class="text-muted d-block">Teléfono</small>
-                    <strong>{{ $customer->phone ?: '—' }}</strong>
-                </div>
+            @if ($editingCustomer)
 
-                <div class="col-md-6 col-lg-4 mb-3">
-                    <small class="text-muted d-block">Correo electrónico</small>
-                    <strong>{{ $customer->email ?: '—' }}</strong>
-                </div>
+                {{-- FORMULARIO DE EDICIÓN --}}
+                <form wire:submit.prevent="updateCustomer">
 
-                <div class="col-md-6 col-lg-4 mb-3">
-                    <small class="text-muted d-block">Contratos registrados</small>
-                    <h5 class="mb-0">
+                    <div class="row">
+
+                        <div class="col-md-6 col-lg-4">
+                            <div class="form-group">
+                                <label>Nombre completo *</label>
+
+                                <input
+                                    type="text"
+                                    class="form-control @error('customerForm.name') is-invalid @enderror"
+                                    wire:model="customerForm.name"
+                                    placeholder="Nombre del cliente"
+                                >
+
+                                @error('customerForm.name')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 col-lg-4">
+                            <div class="form-group">
+                                <label>Organización</label>
+
+                                <input
+                                    type="text"
+                                    class="form-control @error('customerForm.organization') is-invalid @enderror"
+                                    wire:model="customerForm.organization"
+                                    placeholder="Empresa u organización"
+                                >
+
+                                @error('customerForm.organization')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 col-lg-4">
+                            <div class="form-group">
+                                <label>CI / NIT</label>
+
+                                <input
+                                    type="text"
+                                    class="form-control @error('customerForm.ci_nit') is-invalid @enderror"
+                                    wire:model="customerForm.ci_nit"
+                                    placeholder="Documento de identidad"
+                                >
+
+                                @error('customerForm.ci_nit')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 col-lg-4">
+                            <div class="form-group">
+                                <label>Teléfono</label>
+
+                                <input
+                                    type="text"
+                                    class="form-control @error('customerForm.phone') is-invalid @enderror"
+                                    wire:model="customerForm.phone"
+                                    placeholder="Número de teléfono"
+                                >
+
+                                @error('customerForm.phone')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 col-lg-4">
+                            <div class="form-group">
+                                <label>Correo electrónico</label>
+
+                                <input
+                                    type="email"
+                                    class="form-control @error('customerForm.email') is-invalid @enderror"
+                                    wire:model="customerForm.email"
+                                    placeholder="correo@ejemplo.com"
+                                >
+
+                                @error('customerForm.email')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-end">
+
+                        <button
+                            type="button"
+                            class="btn btn-secondary mr-2"
+                            wire:click="cancelCustomerEdit"
+                            wire:loading.attr="disabled"
+                        >
+                            <i class="fas fa-times mr-1"></i>
+                            Cancelar
+                        </button>
+
+                        <button
+                            type="submit"
+                            class="btn btn-success"
+                            wire:loading.attr="disabled"
+                        >
+                        <span wire:loading.remove wire:target="updateCustomer">
+                            <i class="fas fa-save mr-1"></i>
+                            Guardar cambios
+                        </span>
+
+                            <span wire:loading wire:target="updateCustomer">
+                            <i class="fas fa-spinner fa-spin mr-1"></i>
+                            Guardando...
+                        </span>
+                        </button>
+
+                    </div>
+
+                </form>
+
+            @else
+
+                {{-- VISUALIZACIÓN DE DATOS --}}
+                <div class="row">
+
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <small class="text-muted d-block">Nombre</small>
+                        <strong>{{ $customer->name }}</strong>
+                    </div>
+
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <small class="text-muted d-block">Organización</small>
+                        <strong>{{ $customer->organization ?: '—' }}</strong>
+                    </div>
+
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <small class="text-muted d-block">CI / NIT</small>
+                        <strong>{{ $customer->ci_nit ?: '—' }}</strong>
+                    </div>
+
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <small class="text-muted d-block">Teléfono</small>
+                        <strong>{{ $customer->phone ?: '—' }}</strong>
+                    </div>
+
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <small class="text-muted d-block">Correo electrónico</small>
+                        <strong>{{ $customer->email ?: '—' }}</strong>
+                    </div>
+
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <small class="text-muted d-block">Contratos registrados</small>
+                        <h5 class="mb-0">
                         <span class="badge badge-info">
                             {{ $this->contracts->count() }}
                         </span>
-                    </h5>
+                        </h5>
+                    </div>
+
                 </div>
-            </div>
+
+            @endif
+
         </div>
     </div>
 
