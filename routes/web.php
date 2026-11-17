@@ -26,8 +26,6 @@ Route::prefix('/dashboard')
 
         Route::livewire('/worker', 'pages::work.index')
             ->name('dashboard.worker');
-        Route::livewire('/history-works', 'pages::industry.build-history'
-        )->name('dashboard.history-works');
 
 
         // Productos: Supervisor, Admin y Privilegio.
@@ -37,6 +35,9 @@ Route::prefix('/dashboard')
 
             Route::livewire('/product/{product}', 'pages::product.view')
                 ->name('dashboard.products.view');
+
+            Route::livewire('/history-works', 'pages::industry.build-history'
+            )->name('dashboard.history-works');
         });
 
 
