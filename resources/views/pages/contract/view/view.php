@@ -229,12 +229,13 @@ new class extends Component
                 $componentProgress
             ) {
 
-                $assemblies = $this->contract->assemblies
-                    ->where(
-                        'product_id',
-                        $detail->product_id
-                        )
-                        ->where('detail_contract_id',$detail->id);
+                $assemblies = $this->contract->assemblies()
+                    ->where(function ($query) use ($detail) {
+                        $query->where('product_id', $detail->product_id)
+                            ->orWhere('detail_contract_id', $detail->id);
+                    })
+                    ->get();
+
 
 
                 return [
