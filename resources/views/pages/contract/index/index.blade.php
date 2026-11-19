@@ -36,6 +36,12 @@
                     <span class="badge {{ $contract->status->badgeClass() }}">
                         {{ $contract->status->label() }}
                     </span>
+            </td>
+
+                <td>
+                    <span class="badge {{ $contract->priority->badgeClass() }}">
+                        {{ $contract->priority->label() }}
+                    </span>
                 </td>
 
                 <td>

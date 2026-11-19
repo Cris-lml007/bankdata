@@ -90,6 +90,7 @@ new class extends Component
             'Cliente' => null,
             'Entrega' => 'delivery_date',
             'Estado' => 'status',
+            'Prioridad' => 'priority',
             'Acciones' => null,
         ];
 

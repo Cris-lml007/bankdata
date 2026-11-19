@@ -602,11 +602,13 @@
 
                             <option value="">Todas las prioridades</option>
 
-                            @foreach (\App\Enums\Priority::cases() as $priority)
-                                <option value="{{ $priority->value }}">
-                                    {{ $priority->label() }}
-                                </option>
-                            @endforeach
+                            <option value="{{ \App\Enums\Priority::NORMAL->value }}">
+                                {{ \App\Enums\Priority::NORMAL->label() }}
+                            </option>
+
+                            <option value="{{ \App\Enums\Priority::URGENT->value }}">
+                                {{ \App\Enums\Priority::URGENT->label() }}
+                            </option>
                         </select>
                     </div>
                 </div>

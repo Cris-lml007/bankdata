@@ -15,6 +15,8 @@ new class extends Component
 
     public string $statusFilter = 'all';
 
+    public string $priorityFilter = 'all';
+
     public function mount()
     {
         $this->loadContracts();
@@ -26,6 +28,11 @@ new class extends Component
     }
 
     public function updatedStatusFilter()
+    {
+        $this->loadContracts();
+    }
+
+    public function updatedPriorityFilter()
     {
         $this->loadContracts();
     }
@@ -59,6 +66,10 @@ new class extends Component
                 Status::ACTIVE,
                 Status::FINISH,
             ]);
+        }
+
+        if($this->priorityFilter != 'all'){
+            $query->where('priority',$this->priorityFilter);
         }
 
         /*

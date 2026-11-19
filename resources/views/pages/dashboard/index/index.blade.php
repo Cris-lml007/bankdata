@@ -44,7 +44,7 @@
             <div class="row">
 
                 {{-- BUSCADOR --}}
-                <div class="col-md-8">
+                <div class="col-md-6">
 
                     <label>
                         Buscar Orden
@@ -60,27 +60,18 @@
 
                         </div>
 
-                        <input
-                            type="text"
-                            class="form-control"
-                            wire:model.live.debounce.300ms="search"
-                            placeholder="Contrato, cliente, CI/NIT, producto, pieza o destino..."
-                        >
+                        <input type="text" class="form-control" wire:model.live.debounce.300ms="search"
+                            placeholder="Contrato, cliente, CI/NIT, producto, pieza o destino...">
 
                         @if ($search !== '')
-
                             <div class="input-group-append">
 
-                                <button
-                                    type="button"
-                                    class="btn btn-outline-secondary"
-                                    wire:click="$set('search', '')"
-                                >
+                                <button type="button" class="btn btn-outline-secondary"
+                                    wire:click="$set('search', '')">
                                     <i class="fas fa-times"></i>
                                 </button>
 
                             </div>
-
                         @endif
 
                     </div>
@@ -95,10 +86,7 @@
                         Estado
                     </label>
 
-                    <select
-                        class="form-control"
-                        wire:model.live="statusFilter"
-                    >
+                    <select class="form-control" wire:model.live="statusFilter">
 
                         <option value="all">
                             Todos
@@ -110,6 +98,31 @@
 
                         <option value="finish">
                             Finalizados
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="col-md-2">
+
+                    <label>
+                        Prioridad
+                    </label>
+
+                    <select class="form-control" wire:model.live="priorityFilter">
+
+                        <option value="all">
+                            Todos
+                        </option>
+
+                        <option value="{{ \App\Enums\Priority::NORMAL->value }}">
+                            {{ \App\Enums\Priority::NORMAL->label() }}
+                        </option>
+
+                        <option value="{{ \App\Enums\Priority::URGENT->value }}">
+                            {{ \App\Enums\Priority::URGENT->label() }}
                         </option>
 
                     </select>
@@ -129,11 +142,8 @@
 
     @forelse ($contracts as $contract)
 
-        <a
-            href="{{ route('dashboard.contracts.view', $contract['id']) }}"
-            class="text-dark"
-            style="text-decoration: none;"
-        >
+        <a href="{{ route('dashboard.contracts.view', $contract['id']) }}" class="text-dark"
+            style="text-decoration: none;">
 
             <div class="card mb-3 shadow-sm">
 
@@ -167,11 +177,8 @@
                             <strong>
 
                                 {{ $contract['delivery_date']
-                                    ? \Carbon\Carbon::parse(
-                                        $contract['delivery_date']
-                                    )->format('d/m/Y')
-                                    : 'Sin fecha'
-                                }}
+                                    ? \Carbon\Carbon::parse($contract['delivery_date'])->format('d/m/Y')
+                                    : 'Sin fecha' }}
 
                             </strong>
 
@@ -185,35 +192,25 @@
                             </small>
 
                             @if ($contract['priority'] === 1)
-
-                                <span class="badge badge-danger">
-        1 - Muy alta
-    </span>
-
-                            @elseif ($contract['priority'] === 2)
-
                                 <span class="badge badge-warning">
-        2 - Alta
-    </span>
-
+                                    1 - Muy alta
+                                </span>
+                            @elseif ($contract['priority'] === 2)
+                                <span class="badge badge-danger">
+                                    2 - Urgente
+                                </span>
                             @elseif ($contract['priority'] === 3)
-
                                 <span class="badge badge-info">
-        3 - Media
-    </span>
-
+                                    3 - Media
+                                </span>
                             @elseif ($contract['priority'] === 4)
-
                                 <span class="badge badge-secondary">
-        4 - Baja
-    </span>
-
+                                    4 - Baja
+                                </span>
                             @elseif ($contract['priority'] === 5)
-
                                 <span class="badge badge-success border">
-        5 - Normal
-    </span>
-
+                                    5 - Normal
+                                </span>
                             @endif
 
 
@@ -235,24 +232,14 @@
 
                         <div class="col-md-2 text-md-right">
 
-                            @if (
-                                $contract['status_value']
-                                === \App\Enums\Status::ACTIVE->value
-                            )
-
+                            @if ($contract['status_value'] === \App\Enums\Status::ACTIVE->value)
                                 <span class="badge badge-warning">
                                     Activo
                                 </span>
-
-                            @elseif (
-                                $contract['status_value']
-                                === \App\Enums\Status::FINISH->value
-                            )
-
+                            @elseif ($contract['status_value'] === \App\Enums\Status::FINISH->value)
                                 <span class="badge badge-primary">
                                     Finalizado
                                 </span>
-
                             @endif
 
                         </div>
@@ -269,7 +256,6 @@
                 <div class="card-body">
 
                     @foreach ($contract['products'] as $product)
-
                         <div class="border rounded p-3 mb-3">
 
                             <div class="row">
@@ -281,11 +267,9 @@
                                     </h5>
 
                                     @if ($product['description'])
-
                                         <small class="text-muted">
                                             {{ $product['description'] }}
                                         </small>
-
                                     @endif
 
                                 </div>
@@ -307,16 +291,10 @@
 
                                     </div>
 
-                                    <div
-                                        class="progress"
-                                        style="height: 18px;"
-                                    >
+                                    <div class="progress" style="height: 18px;">
 
-                                        <div
-                                            class="progress-bar"
-                                            role="progressbar"
-                                            style="width: {{ $product['percentage'] }}%;"
-                                        >
+                                        <div class="progress-bar" role="progressbar"
+                                            style="width: {{ $product['percentage'] }}%;">
                                             {{ $product['percentage'] }}%
                                         </div>
 
@@ -374,7 +352,6 @@
                             {{-- ================================================= --}}
 
                             @if (count($product['components']))
-
                                 <div class="mt-4">
 
                                     <h6 class="mb-3">
@@ -384,7 +361,6 @@
 
 
                                     @foreach ($product['components'] as $component)
-
                                         <div class="border-left pl-3 mb-3">
 
                                             <div class="row align-items-center">
@@ -395,14 +371,10 @@
                                                         {{ $component['name'] }}
                                                     </strong>
 
-                                                    @if (
-                                                        $component['description']
-                                                    )
-
+                                                    @if ($component['description'])
                                                         <small class="text-muted d-block">
                                                             {{ $component['description'] }}
                                                         </small>
-
                                                     @endif
 
                                                 </div>
@@ -410,9 +382,7 @@
 
                                                 <div class="col-md-5">
 
-                                                    <div
-                                                        class="d-flex justify-content-between mb-1"
-                                                    >
+                                                    <div class="d-flex justify-content-between mb-1">
 
                                                         <small>
                                                             Progreso
@@ -430,16 +400,10 @@
 
                                                     </div>
 
-                                                    <div
-                                                        class="progress"
-                                                        style="height: 14px;"
-                                                    >
+                                                    <div class="progress" style="height: 14px;">
 
-                                                        <div
-                                                            class="progress-bar"
-                                                            role="progressbar"
-                                                            style="width: {{ $component['percentage'] }}%;"
-                                                        >
+                                                        <div class="progress-bar" role="progressbar"
+                                                            style="width: {{ $component['percentage'] }}%;">
                                                         </div>
 
                                                     </div>
@@ -449,22 +413,15 @@
 
                                                 <div class="col-md-3 text-md-right">
 
-                                                    @if (
-                                                        $component['percentage']
-                                                        >= 100
-                                                    )
-
+                                                    @if ($component['percentage'] >= 100)
                                                         <span class="badge badge-success">
                                                             Completa
                                                         </span>
-
                                                     @else
-
                                                         <span class="text-muted">
                                                             Pendiente:
                                                             {{ $component['pending'] }}
                                                         </span>
-
                                                     @endif
 
                                                 </div>
@@ -472,15 +429,12 @@
                                             </div>
 
                                         </div>
-
                                     @endforeach
 
                                 </div>
-
                             @endif
 
                         </div>
-
                     @endforeach
 
                 </div>
@@ -511,7 +465,6 @@
                 <i class="fas fa-search fa-3x text-muted mb-3"></i>
 
                 @if ($search !== '')
-
                     <h5>
                         No se encontraron ordenes
                     </h5>
@@ -520,9 +473,7 @@
                         No hay ordenes que coincidan con
                         "{{ $search }}".
                     </p>
-
                 @else
-
                     <h5>
                         No hay ordenes
                     </h5>
@@ -530,7 +481,6 @@
                     <p class="text-muted mb-0">
                         No existen ordenes con el estado seleccionado.
                     </p>
-
                 @endif
 
             </div>
