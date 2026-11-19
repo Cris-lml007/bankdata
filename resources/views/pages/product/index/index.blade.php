@@ -16,8 +16,8 @@
                         <div class="badge badge-primary">
                             {{ $item->name }}
                         </div>
+                    @endforeach
                 </td>
-        @endforeach
         <td>{{ Number::format($product->price_sale, 2) }}</td>
         <td>
             <a href="{{ route('dashboard.products.view', $product->id) }}" class="btn btn-primary"><i
