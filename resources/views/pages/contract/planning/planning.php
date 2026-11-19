@@ -13,6 +13,7 @@ new class extends Component
     public Contract $contract;
 
     public bool $planningContract = false;
+    public bool $canDeletePlanning = false;
 
     public array $planning = [];
 
@@ -44,7 +45,92 @@ new class extends Component
             'assemblies.components.component',
             'assemblies.components.industry',
         ]);
+
+        // Comprobar si existe algún progreso de fabricación.
+        $hasProgress = $this->contract->assemblies()
+            ->where(function ($query) {
+                $query->whereHas('builds')
+                    ->orWhereHas('components.builds');
+            })
+            ->exists();
+
+        $this->canDeletePlanning = !$hasProgress;
     }
+
+    public function deletePlanning()
+    {
+        $deleted = DB::transaction(function () {
+
+            // Obtener todos los ensamblajes del contrato.
+            $assemblies = Assembly::where('contract_id', $this->contract->id)
+                ->with('components')
+                ->lockForUpdate()
+                ->get();
+
+            /*
+            |--------------------------------------------------------------------------
+            | VERIFICAR PROGRESO
+            |--------------------------------------------------------------------------
+            */
+
+            foreach ($assemblies as $assembly) {
+
+                // Verificar progreso del ensamblaje.
+                if ($assembly->builds()->exists()) {
+                    return false;
+                }
+
+                // Verificar progreso de sus componentes.
+                foreach ($assembly->components as $component) {
+
+                    if ($component->builds()->exists()) {
+                        return false;
+                    }
+                }
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | ELIMINAR COMPONENTES Y ENSAMBLAJES
+            |--------------------------------------------------------------------------
+            */
+
+            foreach ($assemblies as $assembly) {
+
+                // Eliminar componentes asociados.
+                $assembly->components()->delete();
+
+                // Eliminar ensamblaje.
+                $assembly->delete();
+            }
+
+            return true;
+        });
+
+        if (!$deleted) {
+
+            $this->addError(
+                'planningDeletion',
+                'No se puede eliminar la planificación porque ya existen piezas fabricadas.'
+            );
+
+            $this->loadContract();
+
+            return;
+        }
+
+        $this->resetErrorBag('planningDeletion');
+
+        // Regresar a la vista de planificación vacía.
+        $this->loadContract();
+
+        session()->flash(
+            'success',
+            'La planificación del contrato fue eliminada correctamente.'
+        );
+    }
+
+
 
     /*
     |--------------------------------------------------------------------------

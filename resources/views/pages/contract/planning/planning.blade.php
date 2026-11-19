@@ -42,6 +42,12 @@
 
         </div>
     @endif
+    @if ($errors->has('planningDeletion'))
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle mr-1"></i>
+            {{ $errors->first('planningDeletion') }}
+        </div>
+    @endif
 
 
     {{-- ========================================================= --}}
@@ -611,16 +617,49 @@
 
                 <div class="card-tools">
 
-                    <button type="button" class="btn btn-warning btn-sm" wire:click="planContract">
-
+                    {{-- REPLANIFICAR --}}
+                    <button
+                        type="button"
+                        class="btn btn-warning btn-sm"
+                        wire:click="planContract"
+                    >
                         <i class="fas fa-edit"></i>
 
                         {{ $contract->assemblies->count() ? 'Replanificar' : 'Asignar tareas' }}
-
                     </button>
 
-                </div>
+                    {{-- ELIMINAR PLANIFICACIÓN --}}
+                    @if ($contract->assemblies->count())
 
+                        @if ($canDeletePlanning)
+
+                            <button
+                                type="button"
+                                class="btn btn-danger btn-sm"
+                                wire:click="deletePlanning"
+                                wire:confirm="¿Estás seguro de eliminar toda la planificación de este contrato? Esta acción eliminará los ensamblajes y sus componentes asignados."
+                            >
+                                <i class="fas fa-trash-alt"></i>
+                                Eliminar planificación
+                            </button>
+
+                        @else
+
+                            <button
+                                type="button"
+                                class="btn btn-secondary btn-sm"
+                                disabled
+                                title="No se puede eliminar porque ya existen piezas fabricadas."
+                            >
+                                <i class="fas fa-lock"></i>
+                                Eliminar planificación
+                            </button>
+
+                        @endif
+
+                    @endif
+
+                </div>
             </div>
 
 

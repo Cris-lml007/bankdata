@@ -10,6 +10,15 @@ use Livewire\Component;
 new class extends Component {
     public Customer $customer;
 
+    public bool $editingCustomer = false;
+
+    public array $customerForm = [
+        'name' => '',
+        'organization' => '',
+        'ci_nit' => '',
+        'phone' => '',
+        'email' => '',
+    ];
     public string $productSearch = '';
 
     public string $contractSearch = '';
@@ -17,6 +26,70 @@ new class extends Component {
     public function mount(Customer $customer): void
     {
         $this->customer = $customer;
+    }
+
+    /**
+     * Activar edición de los datos personales del cliente.
+     */
+    public function editCustomer(): void
+    {
+        $this->customerForm = [
+            'name' => $this->customer->name ?? '',
+            'organization' => $this->customer->organization ?? '',
+            'ci_nit' => $this->customer->ci_nit ?? '',
+            'phone' => $this->customer->phone ?? '',
+            'email' => $this->customer->email ?? '',
+        ];
+
+        $this->resetValidation();
+
+        $this->editingCustomer = true;
+    }
+
+    /**
+     * Cancelar edición sin guardar cambios.
+     */
+    public function cancelCustomerEdit(): void
+    {
+        $this->resetValidation();
+
+        $this->editingCustomer = false;
+
+        $this->customerForm = [
+            'name' => '',
+            'organization' => '',
+            'ci_nit' => '',
+            'phone' => '',
+            'email' => '',
+        ];
+    }
+
+    /**
+     * Guardar únicamente los datos personales del cliente.
+     */
+    public function updateCustomer(): void
+    {
+        $validated = $this->validate([
+            'customerForm.name' => 'required|string|max:255',
+            'customerForm.organization' => 'nullable|string|max:255',
+            'customerForm.ci_nit' => 'nullable|string|max:50',
+            'customerForm.phone' => 'nullable|string|max:50',
+            'customerForm.email' => 'nullable|email|max:255',
+        ]);
+
+        $this->customer->forceFill([
+            'name' => $validated['customerForm']['name'],
+            'organization' => $validated['customerForm']['organization'] ?: null,
+            'ci_nit' => $validated['customerForm']['ci_nit'] ?: null,
+            'phone' => $validated['customerForm']['phone'] ?: null,
+            'email' => $validated['customerForm']['email'] ?: null,
+        ])->save();
+
+        $this->customer->refresh();
+
+        $this->editingCustomer = false;
+
+        session()->flash('customerUpdated', 'Los datos del cliente se actualizaron correctamente.');
     }
 
     /**
