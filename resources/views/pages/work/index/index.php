@@ -381,9 +381,9 @@ public function updatedWorkerPriority(): void
 
         $class = match ($enum) {
             Priority::URGENT => 'danger',
-            // Priority::HIGH => 'warning',
-            // Priority::MEDIUM => 'info',
-            // Priority::LOW => 'secondary',
+            Priority::HIGH => 'warning',
+            Priority::MEDIUM => 'info',
+            Priority::LOW => 'secondary',
             Priority::NORMAL => 'success',
         };
 
