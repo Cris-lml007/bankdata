@@ -25,7 +25,10 @@ enum Priority: int
     {
         return match ($this) {
             self::NORMAL => 'badge-success',
-            self::URGENT => 'badge-danger'
+            self::URGENT => 'badge-danger',
+            self::MEDIUM => 'badge-primary',
+            self::LOW => 'badge-secondary',
+            self::HIGH => 'badge-warning',
         };
     }
 
