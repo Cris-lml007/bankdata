@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\DetailContract;
 use App\Models\Product;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -47,6 +48,18 @@ new class extends Component
                 $this->list['sort_direction']
             )
             ->paginate();
+    }
+
+
+    public function isEmpty($id){
+        return !DetailContract::where('product_id',$id)->exists();
+    }
+
+
+    public function deleteProduct($id){
+        $product = Product::find($id);
+        $product->delete();
+        return $this->redirect(route('dashboard.products'));
     }
 
 

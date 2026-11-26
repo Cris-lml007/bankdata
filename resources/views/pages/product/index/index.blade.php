@@ -20,6 +20,7 @@
                 </td>
         <td>{{ Number::format($product->price_sale, 2) }}</td>
         <td>
+            <button data-id="{{ $product->id }}" class="btn btn-danger btn-remove"><i class="fa fa-trash"></i></button>
             <a href="{{ route('dashboard.products.view', $product->id) }}" class="btn btn-primary"><i
                     class="fa fa-eye"></i></a>
         </td>
