@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('path');
             $table->string('mime');
-            $table->unsignedInteger('product_id');
+            $table->unsignedBigInteger('product_id');
             $table->foreign('product_id')->references('id')->on('products');
             $table->timestamps();
         });
