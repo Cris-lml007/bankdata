@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('model');
             $table->decimal('price_sale');
             $table->decimal('price_purchase');
-            $table->decimal('description');
+            $table->string('description');
             $table->unsignedBigInteger('type_factory_id');
             $table->timestamps();
         });
