@@ -18,7 +18,7 @@ return new class extends Migration
             $table->unsignedBigInteger('contract_id');
             $table->foreign('contract_id')->references('id')->on('contracts')->cascadeOnDelete();
             $table->integer('quantity');
-            $table->unsignedBigInteger('industry_id');
+            $table->unsignedBigInteger('industry_id')->nullable();
             $table->foreign('industry_id')->references('id')->on('industries')->nullOnDelete();
             $table->enum('status',\App\Enums\Status::cases())->default(\App\Enums\Status::ACTIVE);
             $table->timestamps();
