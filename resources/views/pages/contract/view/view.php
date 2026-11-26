@@ -1178,7 +1178,6 @@ new class extends Component
 
                     })
                     ->orderBy('name')
-                    ->limit(8)
                     ->get();
         }
 

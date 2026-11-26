@@ -313,7 +313,13 @@
                             placeholder="Buscar por código o nombre..." autocomplete="off">
 
                         @if (count($productResults))
-                            <div class="list-group position-absolute w-100" style="z-index: 1000;">
+                            <div class="list-group position-absolute w-100 shadow"
+                                style="
+                                    z-index: 1050;
+                                    max-height: 250px;
+                                    overflow-y: auto;
+                                    overflow-x: hidden;
+                                ">
                                 @foreach ($productResults as $product)
                                     <button type="button" wire:key="product-result-{{ $product->id }}"
                                         wire:click="selectProduct({{ $product->id }})"

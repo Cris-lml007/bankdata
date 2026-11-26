@@ -468,7 +468,6 @@ new class extends Component
                         ->orWhere('name', 'like', "%{$search}%");
                 })
                 ->orderBy('name')
-                ->limit(8)
                 ->get();
         }
 
