@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('type_factories', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->integer('description');
+            $table->string('description');
             $table->timestamps();
         });
 
