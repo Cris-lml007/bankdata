@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('assemblies', function (Blueprint $table) {
             $table->id();
-            $table->unsignedInteger('product_id');
+            $table->unsignedBigInteger('product_id');
             $table->foreign('product_id')->references('id')->on('products');
-            $table->unsignedInteger('contract_id');
+            $table->unsignedBigInteger('contract_id');
             $table->foreign('contract_id')->references('id')->on('contracts')->cascadeOnDelete();
             $table->integer('quantity');
-            $table->unsignedInteger('industry_id');
+            $table->unsignedBigInteger('industry_id');
             $table->foreign('industry_id')->references('id')->on('industries')->nullOnDelete();
             $table->enum('status',\App\Enums\Status::cases())->default(\App\Enums\Status::ACTIVE);
             $table->timestamps();

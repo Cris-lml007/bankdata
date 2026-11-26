@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('contracts', function (Blueprint $table) {
             $table->id();
-            $table->unsignedInteger('customer_id')->nullable();
-            $table->unsignedInteger('quotation_id')->nullable();
+            $table->unsignedBigInteger('customer_id')->nullable();
+            $table->unsignedBigInteger('quotation_id')->nullable();
             $table->date('delivery_date')->nullable();
             $table->string('destination')->nullable();
             $table->enum('method_payment',\App\Enums\TypePayment::cases())->default(\App\Enums\TypePayment::NONE);

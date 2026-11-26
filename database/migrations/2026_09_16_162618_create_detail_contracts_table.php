@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('detail_contracts', function (Blueprint $table) {
             $table->id();
-            $table->unsignedInteger('contract_id')->nullable();
-            $table->unsignedInteger('product_id');
+            $table->unsignedBigInteger('contract_id')->nullable();
+            $table->unsignedBigInteger('product_id');
             $table->integer('quantity');
             $table->decimal('price', 15, 2);
             $table->timestamps();

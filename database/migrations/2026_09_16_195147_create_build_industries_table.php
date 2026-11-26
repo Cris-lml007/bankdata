@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('build_industries', function (Blueprint $table) {
             $table->id();
-            $table->unsignedInteger('industry_id');
+            $table->unsignedBigInteger('industry_id');
             $table->foreign('industry_id')->references('id')->on('industries');
             $table->integer('quantity');
             $table->morphs('buildeable');

@@ -19,7 +19,7 @@ return new class extends Migration
             $table->foreign('assembly_id')->references('id')->on('assemblies')->cascadeOnDelete();
             $table->foreign('component_id')->references('id')->on('component_products')->cascadeOnDelete();
             $table->integer('quantity');
-            $table->unsignedInteger('industry_id');
+            $table->unsignedBigInteger('industry_id');
             $table->foreign('industry_id')->references('id')->on('industries')->nullOnDelete();
             $table->enum('status',\App\Enums\Status::cases())->default(Status::ACTIVE);
             $table->timestamps();
